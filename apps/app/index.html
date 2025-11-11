@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=240, height=282, user-scalable=no, initial-scale=1.0">
+    <title>Curling Timer</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Main Timer View -->
+        <div id="mainView" class="view">
+            <div class="header">
+                <h1>CURLING TIMER</h1>
+                <button id="menuBtn" class="icon-btn">⚙</button>
+            </div>
+            
+            <div class="timer-display">
+                <div id="timerValue">0.00s</div>
+                <div id="timerStatus">Press side button to start</div>
+            </div>
+            
+            <!-- Curling Ice Sheet Graphic -->
+            <div class="ice-sheet">
+                <svg id="curlingSheet" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Ice background -->
+                    <rect width="200" height="300" fill="#e8f4f8"/>
+                    
+                    <!-- Hog line (top) -->
+                    <line x1="0" y1="30" x2="200" y2="30" stroke="#c41e3a" stroke-width="2"/>
+                    <text x="100" y="25" text-anchor="middle" fill="#c41e3a" font-size="10">HOG LINE</text>
+                    
+                    <!-- Back line (bottom) -->
+                    <line x1="0" y1="270" x2="200" y2="270" stroke="#c41e3a" stroke-width="2"/>
+                    <text x="100" y="285" text-anchor="middle" fill="#c41e3a" font-size="10">BACK LINE</text>
+                    
+                    <!-- House circles -->
+                    <circle cx="100" cy="220" r="50" fill="none" stroke="#0066cc" stroke-width="2"/>
+                    <circle cx="100" cy="220" r="35" fill="none" stroke="#fff" stroke-width="2"/>
+                    <circle cx="100" cy="220" r="20" fill="none" stroke="#c41e3a" stroke-width="2"/>
+                    <circle cx="100" cy="220" r="5" fill="#c41e3a"/>
+                    
+                    <!-- Center line -->
+                    <line x1="100" y1="0" x2="100" y2="300" stroke="#000" stroke-width="1" stroke-dasharray="5,5" opacity="0.3"/>
+                    
+                    <!-- Stone indicator -->
+                    <circle id="stoneIndicator" cx="100" cy="30" r="8" fill="#ffcc00" stroke="#000" stroke-width="1.5" opacity="0"/>
+                </svg>
+            </div>
+            
+            <!-- Ice Speed Control -->
+            <div class="ice-speed">
+                <div class="speed-label">Ice Speed: <span id="speedValue">5</span>/10</div>
+                <div class="speed-hint">Use scroll wheel to adjust</div>
+            </div>
+            
+            <!-- Sweeping Recommendation -->
+            <div id="sweepingRec" class="sweeping-rec">
+                <div class="rec-title">Sweeping</div>
+                <div id="recText">-</div>
+            </div>
+            
+            <!-- Shot History -->
+            <div class="shot-history">
+                <div class="history-title">Last Shots</div>
+                <div id="shotList" class="shot-list"></div>
+            </div>
+        </div>
+        
+        <!-- Settings Menu View -->
+        <div id="settingsView" class="view hidden">
+            <div class="header">
+                <button id="backBtn" class="icon-btn">←</button>
+                <h1>SETTINGS</h1>
+            </div>
+            
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h2>Ice Speed History</h2>
+                    <div id="speedHistory" class="speed-history"></div>
+                </div>
+                
+                <div class="settings-section">
+                    <h2>Average Times</h2>
+                    <div id="avgTimes" class="avg-times"></div>
+                </div>
+                
+                <div class="settings-section">
+                    <button id="resetBtn" class="reset-btn">Reset All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
