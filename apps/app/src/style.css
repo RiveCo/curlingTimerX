@@ -46,6 +46,19 @@ html, body {
     border-bottom: 2px solid #FE5F00;
 }
 
+/* Fixed Info Panel - Timer and Sweeping */
+.fixed-info-panel {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2vw 4vw;
+    border-bottom: 2px solid rgba(254, 95, 0, 0.5);
+}
+
 h1 {
     font-size: 5vw;
     color: #FE5F00;
@@ -76,25 +89,25 @@ h1 {
 
 /* Timer Display */
 .timer-display {
-    padding: 4vw;
     text-align: center;
-    background-color: #1a1a1a;
-    margin: 2vw 4vw;
+    background-color: rgba(26, 26, 26, 0.8);
     border-radius: 2vw;
     border: 2px solid #333;
+    padding: 2vw;
+    margin-bottom: 2vw;
 }
 
 #timerValue {
-    font-size: 12vw;
+    font-size: 10vw;
     font-weight: bold;
     color: #FE5F00;
     font-variant-numeric: tabular-nums;
 }
 
 #timerStatus {
-    font-size: 3.5vw;
+    font-size: 3vw;
     color: #aaa;
-    margin-top: 2vw;
+    margin-top: 1vw;
 }
 
 .timer-display.running {
@@ -154,22 +167,21 @@ h1 {
 
 /* Sweeping Recommendation */
 .sweeping-rec {
-    padding: 3vw 4vw;
-    background-color: #1a1a1a;
-    margin: 2vw 4vw;
+    padding: 2vw;
+    background-color: rgba(26, 26, 26, 0.8);
     border-radius: 2vw;
     border: 2px solid #333;
 }
 
 .rec-title {
-    font-size: 4vw;
+    font-size: 3.5vw;
     color: #FE5F00;
     font-weight: bold;
-    margin-bottom: 2vw;
+    margin-bottom: 1vw;
 }
 
 #recText {
-    font-size: 3.5vw;
+    font-size: 3vw;
     color: #fff;
     line-height: 1.4;
 }

@@ -13,11 +13,12 @@ let timerState = {
 };
 
 let appState = {
-  iceSpeed: 5, // Default ice speed (1-10 scale)
+  iceSpeed: 5, // Default ice speed (1-10 scale) - 5 represents medium ice
   shots: [], // Array of shot objects (max 8)
   speedHistory: [], // Historical ice speed data
   currentView: 'main', // 'main' or 'settings'
-  adjustingPosition: false // Whether we're adjusting stone position after timing
+  adjustingPosition: false, // Whether we're adjusting stone position after timing
+  pttPressed: false // Track PTT button state
 };
 
 // ===========================================
@@ -86,12 +87,15 @@ function startTimer() {
   timerState.currentMode = 'timing';
   
   updateTimerDisplay();
-  animateStone();
   
-  // Update timer display every 10ms
+  // Update timer display and stone position every 10ms during timing
   timerState.interval = setInterval(() => {
     timerState.elapsedTime = (Date.now() - timerState.startTime) / 1000;
     updateTimerDisplay();
+    
+    // Real-time stone position update during timing
+    const currentPosition = calculateStonePosition(timerState.elapsedTime, appState.iceSpeed);
+    updateStoneIndicator(currentPosition);
   }, 10);
 }
 
@@ -170,13 +174,13 @@ function updateTimerDisplay() {
   timerValue.textContent = timerState.elapsedTime.toFixed(2) + 's';
   
   if (timerState.currentMode === 'timing') {
-    timerStatus.textContent = 'Timing... Press to stop';
+    timerStatus.textContent = 'Timing... Release to stop';
     timerDisplay.classList.add('running');
   } else if (timerState.currentMode === 'stopped') {
     timerStatus.textContent = 'Adjust position with scroll wheel';
     timerDisplay.classList.remove('running');
   } else {
-    timerStatus.textContent = 'Press side button to start';
+    timerStatus.textContent = 'Hold side button to start';
     timerDisplay.classList.remove('running');
   }
 }
@@ -211,23 +215,23 @@ function updateSweepingRecommendation(time, iceSpeed, position) {
   const recText = document.getElementById('recText');
   const sweepingRec = document.getElementById('sweepingRec');
   
-  // Calculate sweeping recommendation
-  // Faster times (shorter) = need more sweep to extend
-  // Slower times (longer) = need less sweep
+  // Calculate sweeping recommendation based on standard 4.5s target time
+  // Times are for hogline to button center (tee line)
+  // Standard target is approximately 4.5 seconds
   
   let recommendation = '';
   let intensity = '';
   
-  if (time < 3.5) {
+  if (time < 3.8) {
     recommendation = 'HEAVY SWEEP NEEDED - Stone is short';
     intensity = 'heavy';
   } else if (time < 4.2) {
     recommendation = 'Moderate sweep - Stone slightly short';
     intensity = 'medium';
-  } else if (time < 5.0) {
+  } else if (time < 4.8) {
     recommendation = 'Light sweep - Good weight';
     intensity = 'light';
-  } else if (time < 5.5) {
+  } else if (time < 5.2) {
     recommendation = 'Minimal sweep - Stone is heavy';
     intensity = 'light';
   } else {
@@ -434,6 +438,48 @@ function updateUI() {
 // Hardware Event Handlers
 // ===========================================
 
+// PTT button handlers for hold-to-start, release-to-stop behavior
+window.addEventListener('longPressStart', () => {
+  if (appState.currentView === 'settings') return;
+  
+  if (appState.adjustingPosition) {
+    // Confirm shot and record it
+    recordShot(appState.currentShotTime, appState.currentStonePosition, appState.iceSpeed);
+    resetTimer();
+  } else if (timerState.currentMode === 'ready') {
+    // Start timing when button is held
+    appState.pttPressed = true;
+    startTimer();
+  } else if (timerState.currentMode === 'stopped') {
+    // Reset and start new timing
+    resetTimer();
+    appState.pttPressed = true;
+    startTimer();
+  }
+});
+
+window.addEventListener('longPressEnd', () => {
+  if (appState.currentView === 'settings') return;
+  
+  if (appState.pttPressed && timerState.currentMode === 'timing') {
+    // Stop timing when button is released
+    appState.pttPressed = false;
+    stopTimer();
+  }
+});
+
+// Fallback to sideClick for single press actions (if longPress not available)
+window.addEventListener('sideClick', () => {
+  // Only handle sideClick if longPress events are not being triggered
+  if (appState.currentView === 'settings') return;
+  
+  if (appState.adjustingPosition) {
+    // Confirm shot and record it
+    recordShot(appState.currentShotTime, appState.currentStonePosition, appState.iceSpeed);
+    resetTimer();
+  }
+});
+
 window.addEventListener('scrollUp', () => {
   if (appState.currentView === 'settings') return;
   
@@ -466,22 +512,6 @@ window.addEventListener('scrollDown', () => {
   }
 });
 
-window.addEventListener('sideClick', () => {
-  if (appState.currentView === 'settings') return;
-  
-  if (appState.adjustingPosition) {
-    // Confirm shot and record it
-    recordShot(appState.currentShotTime, appState.currentStonePosition, appState.iceSpeed);
-    resetTimer();
-  } else if (timerState.currentMode === 'ready') {
-    startTimer();
-  } else if (timerState.currentMode === 'timing') {
-    stopTimer();
-  } else if (timerState.currentMode === 'stopped') {
-    resetTimer();
-  }
-});
-
 // ===========================================
 // Button Event Handlers
 // ===========================================
@@ -504,16 +534,33 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Keyboard fallback for development
   if (typeof PluginMessageHandler === 'undefined') {
+    let spacePressed = false;
+    
     window.addEventListener('keydown', (event) => {
-      if (event.code === 'Space') {
+      if (event.code === 'Space' && !event.repeat) {
         event.preventDefault();
-        window.dispatchEvent(new CustomEvent('sideClick'));
+        if (!spacePressed) {
+          spacePressed = true;
+          // Simulate longPressStart for hold behavior
+          window.dispatchEvent(new CustomEvent('longPressStart'));
+        }
       } else if (event.code === 'ArrowUp') {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent('scrollUp'));
       } else if (event.code === 'ArrowDown') {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent('scrollDown'));
+      }
+    });
+    
+    window.addEventListener('keyup', (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (spacePressed) {
+          spacePressed = false;
+          // Simulate longPressEnd for release behavior
+          window.dispatchEvent(new CustomEvent('longPressEnd'));
+        }
       }
     });
   }
