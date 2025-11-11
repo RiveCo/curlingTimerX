@@ -13,11 +13,12 @@ let timerState = {
 };
 
 let appState = {
-  iceSpeed: 5, // Default ice speed (1-10 scale)
+  iceSpeed: 5, // Default ice speed (1-10 scale) - 5 represents medium ice
   shots: [], // Array of shot objects (max 8)
   speedHistory: [], // Historical ice speed data
   currentView: 'main', // 'main' or 'settings'
-  adjustingPosition: false // Whether we're adjusting stone position after timing
+  adjustingPosition: false, // Whether we're adjusting stone position after timing
+  pttPressed: false // Track PTT button state
 };
 
 // ===========================================
@@ -86,12 +87,15 @@ function startTimer() {
   timerState.currentMode = 'timing';
   
   updateTimerDisplay();
-  animateStone();
   
-  // Update timer display every 10ms
+  // Update timer display and stone position every 10ms during timing
   timerState.interval = setInterval(() => {
     timerState.elapsedTime = (Date.now() - timerState.startTime) / 1000;
     updateTimerDisplay();
+    
+    // Real-time stone position update during timing
+    const currentPosition = calculateStonePosition(timerState.elapsedTime, appState.iceSpeed);
+    updateStoneIndicator(currentPosition);
   }, 10);
 }
 
@@ -147,6 +151,21 @@ function calculateStonePosition(time, iceSpeed) {
   return Math.max(0, Math.min(100, position));
 }
 
+function calculateTimeFromPosition(position, iceSpeed) {
+  // Inverse calculation: given position and ice speed, calculate time
+  // This allows adjusting time when user changes stone position
+  
+  const speedFactor = iceSpeed / 10; // 0.1 to 1.0
+  
+  // Reverse the position formula: position = timeFactor * 100 * (0.5 + speedFactor * 0.5)
+  const timeFactor = position / (100 * (0.5 + speedFactor * 0.5));
+  
+  // Reverse the time normalization: timeFactor = (time - 2) / 4
+  const time = (timeFactor * 4) + 2;
+  
+  return Math.max(2, Math.min(6, time));
+}
+
 function getShotType(position) {
   // Position 0-100 scale
   // 0-35: Guard (short)
@@ -167,16 +186,18 @@ function updateTimerDisplay() {
   const timerStatus = document.getElementById('timerStatus');
   const timerDisplay = document.querySelector('.timer-display');
   
-  timerValue.textContent = timerState.elapsedTime.toFixed(2) + 's';
+  // Show current shot time when adjusting, elapsed time otherwise
+  const displayTime = appState.adjustingPosition ? appState.currentShotTime : timerState.elapsedTime;
+  timerValue.textContent = displayTime.toFixed(2) + 's';
   
   if (timerState.currentMode === 'timing') {
-    timerStatus.textContent = 'Timing... Press to stop';
+    timerStatus.textContent = 'Timing... Release to stop';
     timerDisplay.classList.add('running');
   } else if (timerState.currentMode === 'stopped') {
     timerStatus.textContent = 'Adjust position with scroll wheel';
     timerDisplay.classList.remove('running');
   } else {
-    timerStatus.textContent = 'Press side button to start';
+    timerStatus.textContent = 'Hold side button to start';
     timerDisplay.classList.remove('running');
   }
 }
@@ -211,23 +232,37 @@ function updateSweepingRecommendation(time, iceSpeed, position) {
   const recText = document.getElementById('recText');
   const sweepingRec = document.getElementById('sweepingRec');
   
-  // Calculate sweeping recommendation
-  // Faster times (shorter) = need more sweep to extend
-  // Slower times (longer) = need less sweep
+  // Calculate sweeping recommendation based on ice speed
+  // The target time varies with ice speed:
+  // - Slow ice (1-3): longer times (5.0-5.5s target)
+  // - Medium ice (4-7): standard times (4.5s target)
+  // - Fast ice (8-10): shorter times (3.8-4.2s target)
+  
+  // Calculate dynamic target based on ice speed
+  // Slower ice = longer target time, faster ice = shorter target time
+  const baseTarget = 4.5;
+  const speedOffset = (5 - iceSpeed) * 0.15; // -0.75 to +0.6 seconds
+  const targetTime = baseTarget + speedOffset;
+  
+  // Define thresholds relative to target time
+  const veryShort = targetTime - 0.7;
+  const slightlyShort = targetTime - 0.3;
+  const slightlyHeavy = targetTime + 0.3;
+  const veryHeavy = targetTime + 0.7;
   
   let recommendation = '';
   let intensity = '';
   
-  if (time < 3.5) {
+  if (time < veryShort) {
     recommendation = 'HEAVY SWEEP NEEDED - Stone is short';
     intensity = 'heavy';
-  } else if (time < 4.2) {
+  } else if (time < slightlyShort) {
     recommendation = 'Moderate sweep - Stone slightly short';
     intensity = 'medium';
-  } else if (time < 5.0) {
+  } else if (time < slightlyHeavy) {
     recommendation = 'Light sweep - Good weight';
     intensity = 'light';
-  } else if (time < 5.5) {
+  } else if (time < veryHeavy) {
     recommendation = 'Minimal sweep - Stone is heavy';
     intensity = 'light';
   } else {
@@ -235,7 +270,7 @@ function updateSweepingRecommendation(time, iceSpeed, position) {
     intensity = 'heavy';
   }
   
-  // Adjust for ice speed
+  // Add ice speed context
   if (iceSpeed < 4) {
     recommendation += ' (Slow ice)';
   } else if (iceSpeed > 7) {
@@ -434,13 +469,60 @@ function updateUI() {
 // Hardware Event Handlers
 // ===========================================
 
+// PTT button handlers for hold-to-start, release-to-stop behavior
+window.addEventListener('longPressStart', () => {
+  if (appState.currentView === 'settings') return;
+  
+  if (appState.adjustingPosition) {
+    // Confirm shot and record it
+    recordShot(appState.currentShotTime, appState.currentStonePosition, appState.iceSpeed);
+    resetTimer();
+  } else if (timerState.currentMode === 'ready') {
+    // Start timing when button is held
+    appState.pttPressed = true;
+    startTimer();
+  } else if (timerState.currentMode === 'stopped') {
+    // Reset and start new timing
+    resetTimer();
+    appState.pttPressed = true;
+    startTimer();
+  }
+});
+
+window.addEventListener('longPressEnd', () => {
+  if (appState.currentView === 'settings') return;
+  
+  if (appState.pttPressed && timerState.currentMode === 'timing') {
+    // Stop timing when button is released
+    appState.pttPressed = false;
+    stopTimer();
+  }
+});
+
+// Fallback to sideClick for single press actions (if longPress not available)
+window.addEventListener('sideClick', () => {
+  // Only handle sideClick if longPress events are not being triggered
+  if (appState.currentView === 'settings') return;
+  
+  if (appState.adjustingPosition) {
+    // Confirm shot and record it
+    recordShot(appState.currentShotTime, appState.currentStonePosition, appState.iceSpeed);
+    resetTimer();
+  }
+});
+
 window.addEventListener('scrollUp', () => {
   if (appState.currentView === 'settings') return;
   
   if (appState.adjustingPosition) {
-    // Adjust stone position
+    // Adjust stone position and recalculate time
     appState.currentStonePosition = Math.min(100, appState.currentStonePosition + 5);
+    
+    // Recalculate time based on new position and current ice speed
+    appState.currentShotTime = calculateTimeFromPosition(appState.currentStonePosition, appState.iceSpeed);
+    
     updateStoneIndicator(appState.currentStonePosition);
+    updateTimerDisplay(); // Update to show the new time
     updateSweepingRecommendation(appState.currentShotTime, appState.iceSpeed, appState.currentStonePosition);
   } else {
     // Adjust ice speed
@@ -454,31 +536,20 @@ window.addEventListener('scrollDown', () => {
   if (appState.currentView === 'settings') return;
   
   if (appState.adjustingPosition) {
-    // Adjust stone position
+    // Adjust stone position and recalculate time
     appState.currentStonePosition = Math.max(0, appState.currentStonePosition - 5);
+    
+    // Recalculate time based on new position and current ice speed
+    appState.currentShotTime = calculateTimeFromPosition(appState.currentStonePosition, appState.iceSpeed);
+    
     updateStoneIndicator(appState.currentStonePosition);
+    updateTimerDisplay(); // Update to show the new time
     updateSweepingRecommendation(appState.currentShotTime, appState.iceSpeed, appState.currentStonePosition);
   } else {
     // Adjust ice speed
     appState.iceSpeed = Math.max(1, appState.iceSpeed - 1);
     updateIceSpeedDisplay();
     saveAppData();
-  }
-});
-
-window.addEventListener('sideClick', () => {
-  if (appState.currentView === 'settings') return;
-  
-  if (appState.adjustingPosition) {
-    // Confirm shot and record it
-    recordShot(appState.currentShotTime, appState.currentStonePosition, appState.iceSpeed);
-    resetTimer();
-  } else if (timerState.currentMode === 'ready') {
-    startTimer();
-  } else if (timerState.currentMode === 'timing') {
-    stopTimer();
-  } else if (timerState.currentMode === 'stopped') {
-    resetTimer();
   }
 });
 
@@ -504,16 +575,33 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Keyboard fallback for development
   if (typeof PluginMessageHandler === 'undefined') {
+    let spacePressed = false;
+    
     window.addEventListener('keydown', (event) => {
-      if (event.code === 'Space') {
+      if (event.code === 'Space' && !event.repeat) {
         event.preventDefault();
-        window.dispatchEvent(new CustomEvent('sideClick'));
+        if (!spacePressed) {
+          spacePressed = true;
+          // Simulate longPressStart for hold behavior
+          window.dispatchEvent(new CustomEvent('longPressStart'));
+        }
       } else if (event.code === 'ArrowUp') {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent('scrollUp'));
       } else if (event.code === 'ArrowDown') {
         event.preventDefault();
         window.dispatchEvent(new CustomEvent('scrollDown'));
+      }
+    });
+    
+    window.addEventListener('keyup', (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (spacePressed) {
+          spacePressed = false;
+          // Simulate longPressEnd for release behavior
+          window.dispatchEvent(new CustomEvent('longPressEnd'));
+        }
       }
     });
   }

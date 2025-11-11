@@ -15,9 +15,18 @@
                 <button id="menuBtn" class="icon-btn">⚙</button>
             </div>
             
-            <div class="timer-display">
-                <div id="timerValue">0.00s</div>
-                <div id="timerStatus">Press side button to start</div>
+            <!-- Fixed Timer and Sweeping Display -->
+            <div class="fixed-info-panel">
+                <div class="timer-display">
+                    <div id="timerValue">0.00s</div>
+                    <div id="timerStatus">Hold side button to start</div>
+                </div>
+                
+                <!-- Sweeping Recommendation -->
+                <div id="sweepingRec" class="sweeping-rec">
+                    <div class="rec-title">Sweeping</div>
+                    <div id="recText">-</div>
+                </div>
             </div>
             
             <!-- Curling Ice Sheet Graphic -->
@@ -52,12 +61,6 @@
             <div class="ice-speed">
                 <div class="speed-label">Ice Speed: <span id="speedValue">5</span>/10</div>
                 <div class="speed-hint">Use scroll wheel to adjust</div>
-            </div>
-            
-            <!-- Sweeping Recommendation -->
-            <div id="sweepingRec" class="sweeping-rec">
-                <div class="rec-title">Sweeping</div>
-                <div id="recText">-</div>
             </div>
             
             <!-- Shot History -->
