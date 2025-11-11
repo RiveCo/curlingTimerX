@@ -12,56 +12,64 @@ A specialized curling timer application designed for the Rabbit R1 device with a
 
 ## Accessing on Rabbit R1
 
-### Via QR Code
+### Quick Setup
 
-Once deployed, you can access this app on your Rabbit R1 device by scanning a QR code:
-
-1. **Get your GitHub Pages URL**: After deployment, your app will be available at:
-   ```
-   https://riveco.github.io/curlingTimerX/
-   ```
-
-2. **Generate a QR Code**: Use any QR code generator to create a scannable code:
-   - Online: [QR Code Generator](https://www.qr-code-generator.com/)
-   - Command line: `qrencode -o qr.png "https://riveco.github.io/curlingTimerX/"`
-   - Python: 
-     ```python
-     import qrcode
-     qr = qrcode.QRCode(version=1, box_size=10, border=5)
-     qr.add_data("https://riveco.github.io/curlingTimerX/")
-     qr.make(fit=True)
-     img = qr.make_image(fill_color="black", back_color="white")
-     img.save("curling-timer-qr.png")
-     ```
-
-3. **Scan on Rabbit R1**: 
-   - Open the camera or QR scanner on your Rabbit R1
-   - Point it at the QR code
-   - The app will open in your device's browser
-
-### Direct URL Access
-
-You can also manually enter the URL on your Rabbit R1:
+Once deployed, your app will be available at:
 ```
 https://riveco.github.io/curlingTimerX/
 ```
 
+### Three Ways to Access on Rabbit R1
+
+#### Option 1: Generate QR Code Online (Easiest)
+1. Visit [QR Code Generator](https://www.qr-code-generator.com/)
+2. Paste your GitHub Pages URL: `https://riveco.github.io/curlingTimerX/`
+3. Download the QR code
+4. Scan it with your Rabbit R1's camera
+
+#### Option 2: Use Python Script
+```bash
+# Install dependency
+pip install qrcode[pil]
+
+# Generate QR code
+python generate-qr.py
+
+# Or with custom URL
+python generate-qr.py --url https://riveco.github.io/curlingTimerX/
+```
+
+#### Option 3: Direct URL Access
+Manually enter the URL in your Rabbit R1 browser:
+```
+https://riveco.github.io/curlingTimerX/
+```
+Then bookmark it for quick access!
+
 ## Deployment
+
+### First-Time GitHub Pages Setup
+
+Before the automatic deployment works, you need to enable GitHub Pages:
+
+1. Go to your repository on GitHub: `https://github.com/RiveCo/curlingTimerX`
+2. Click on **Settings** (top navigation)
+3. Click on **Pages** in the left sidebar
+4. Under **Build and deployment**:
+   - **Source**: Select **"GitHub Actions"** (not "Deploy from a branch")
+5. Click **Save** if prompted
+
+That's it! Once this PR is merged to main/master, the workflow will automatically deploy your app.
+
+### Automatic Deployment
 
 This app is automatically deployed to GitHub Pages when changes are pushed to the main/master branch.
 
-### Setup GitHub Pages (First Time)
-
-1. Go to your repository settings
-2. Navigate to "Pages" in the left sidebar
-3. Under "Build and deployment":
-   - **Source**: Select "GitHub Actions"
-4. Save the settings
-
 The GitHub Actions workflow (`.github/workflows/deploy.yml`) will automatically:
+- Install dependencies
 - Build the Vite app
 - Deploy to GitHub Pages
-- Make it available at your GitHub Pages URL
+- Make it available at `https://riveco.github.io/curlingTimerX/`
 
 ### Manual Deployment
 
@@ -111,6 +119,28 @@ Once deployed via GitHub Pages:
 - Any changes pushed to the main/master branch will automatically update the live app
 - Users can refresh the page on their Rabbit R1 to get the latest version
 - No need to rescan the QR code for updates
+
+## Troubleshooting
+
+### Deployment Not Working?
+
+1. **Check GitHub Actions**: Go to the "Actions" tab in your repository to see if the workflow ran
+2. **Verify Pages Settings**: Make sure "GitHub Actions" is selected as the source in Pages settings
+3. **Branch Name**: The workflow runs on `main` or `master` branch - make sure your PR is merged to one of these
+4. **Manual Trigger**: You can manually trigger the workflow from the Actions tab
+
+### Can't Access the App?
+
+1. **Wait for Deployment**: After merging, wait 1-2 minutes for the deployment to complete
+2. **Check URL**: Make sure you're using `https://riveco.github.io/curlingTimerX/` (lowercase, exact spelling)
+3. **Clear Cache**: Try opening in an incognito/private window on your Rabbit R1
+
+### QR Code Not Scanning?
+
+1. **Size**: Make sure the QR code is large enough (at least 200x200 pixels)
+2. **Contrast**: Ensure good contrast between the QR code and background
+3. **Lighting**: Scan in good lighting conditions
+4. **Alternative**: Use direct URL entry as a fallback
 
 ## Metadata
 

@@ -134,8 +134,24 @@
         .download-btn:hover {
             box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4);
         }
+        
+        .instructions code {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .instructions a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .instructions a:hover {
+            text-decoration: underline;
+        }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -163,12 +179,17 @@
                 <li>The Curling Timer app will open in your browser</li>
                 <li>Bookmark the page for quick access later</li>
             </ol>
+            
+            <h2 style="margin-top: 20px;">🌐 Alternative Options:</h2>
+            <ol>
+                <li><strong>Online QR Generator:</strong> Visit <a href="https://www.qr-code-generator.com/" target="_blank" style="color: #667eea;">qr-code-generator.com</a> and paste your URL</li>
+                <li><strong>Python Script:</strong> Use the included <code>generate-qr.py</code> script</li>
+                <li><strong>Direct URL:</strong> Manually enter the URL on your Rabbit R1 browser</li>
+            </ol>
         </div>
     </div>
     
     <script>
-        let qrcode = null;
-        
         function generateQR() {
             const url = document.getElementById('url').value.trim();
             const qrcodeContainer = document.getElementById('qrcode');
@@ -179,33 +200,50 @@
                 return;
             }
             
-            // Clear previous QR code
+            // Clear previous content
             qrcodeContainer.innerHTML = '';
             
-            // Generate new QR code
-            qrcode = new QRCode(qrcodeContainer, {
-                text: url,
-                width: 256,
-                height: 256,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
+            // Create an iframe that uses Google Charts API to generate QR code
+            const size = 256;
+            const qrApiUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(url)}&chs=${size}x${size}&chld=M|0`;
             
-            // Show download button after a short delay (to ensure QR is rendered)
-            setTimeout(() => {
-                downloadBtn.style.display = 'block';
-            }, 100);
+            const img = document.createElement('img');
+            img.src = qrApiUrl;
+            img.alt = 'QR Code';
+            img.style.width = '256px';
+            img.style.height = '256px';
+            img.style.borderRadius = '12px';
+            img.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+            
+            qrcodeContainer.appendChild(img);
+            
+            // Show download button
+            downloadBtn.style.display = 'block';
+            downloadBtn.setAttribute('data-url', qrApiUrl);
         }
         
         function downloadQR() {
-            const canvas = document.querySelector('#qrcode canvas');
-            if (canvas) {
-                const url = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = 'curling-timer-qr.png';
-                link.href = url;
-                link.click();
+            const downloadBtn = document.getElementById('downloadBtn');
+            const url = downloadBtn.getAttribute('data-url');
+            
+            if (url) {
+                // Create a temporary link to download the image
+                fetch(url)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.download = 'curling-timer-qr.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(blobUrl);
+                    })
+                    .catch(error => {
+                        alert('Download failed. Right-click on the QR code and save the image manually.');
+                        console.error('Download error:', error);
+                    });
             }
         }
         
