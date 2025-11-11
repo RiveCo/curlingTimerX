@@ -151,6 +151,21 @@ function calculateStonePosition(time, iceSpeed) {
   return Math.max(0, Math.min(100, position));
 }
 
+function calculateTimeFromPosition(position, iceSpeed) {
+  // Inverse calculation: given position and ice speed, calculate time
+  // This allows adjusting time when user changes stone position
+  
+  const speedFactor = iceSpeed / 10; // 0.1 to 1.0
+  
+  // Reverse the position formula: position = timeFactor * 100 * (0.5 + speedFactor * 0.5)
+  const timeFactor = position / (100 * (0.5 + speedFactor * 0.5));
+  
+  // Reverse the time normalization: timeFactor = (time - 2) / 4
+  const time = (timeFactor * 4) + 2;
+  
+  return Math.max(2, Math.min(6, time));
+}
+
 function getShotType(position) {
   // Position 0-100 scale
   // 0-35: Guard (short)
@@ -171,7 +186,9 @@ function updateTimerDisplay() {
   const timerStatus = document.getElementById('timerStatus');
   const timerDisplay = document.querySelector('.timer-display');
   
-  timerValue.textContent = timerState.elapsedTime.toFixed(2) + 's';
+  // Show current shot time when adjusting, elapsed time otherwise
+  const displayTime = appState.adjustingPosition ? appState.currentShotTime : timerState.elapsedTime;
+  timerValue.textContent = displayTime.toFixed(2) + 's';
   
   if (timerState.currentMode === 'timing') {
     timerStatus.textContent = 'Timing... Release to stop';
@@ -215,23 +232,37 @@ function updateSweepingRecommendation(time, iceSpeed, position) {
   const recText = document.getElementById('recText');
   const sweepingRec = document.getElementById('sweepingRec');
   
-  // Calculate sweeping recommendation based on standard 4.5s target time
-  // Times are for hogline to button center (tee line)
-  // Standard target is approximately 4.5 seconds
+  // Calculate sweeping recommendation based on ice speed
+  // The target time varies with ice speed:
+  // - Slow ice (1-3): longer times (5.0-5.5s target)
+  // - Medium ice (4-7): standard times (4.5s target)
+  // - Fast ice (8-10): shorter times (3.8-4.2s target)
+  
+  // Calculate dynamic target based on ice speed
+  // Slower ice = longer target time, faster ice = shorter target time
+  const baseTarget = 4.5;
+  const speedOffset = (5 - iceSpeed) * 0.15; // -0.75 to +0.6 seconds
+  const targetTime = baseTarget + speedOffset;
+  
+  // Define thresholds relative to target time
+  const veryShort = targetTime - 0.7;
+  const slightlyShort = targetTime - 0.3;
+  const slightlyHeavy = targetTime + 0.3;
+  const veryHeavy = targetTime + 0.7;
   
   let recommendation = '';
   let intensity = '';
   
-  if (time < 3.8) {
+  if (time < veryShort) {
     recommendation = 'HEAVY SWEEP NEEDED - Stone is short';
     intensity = 'heavy';
-  } else if (time < 4.2) {
+  } else if (time < slightlyShort) {
     recommendation = 'Moderate sweep - Stone slightly short';
     intensity = 'medium';
-  } else if (time < 4.8) {
+  } else if (time < slightlyHeavy) {
     recommendation = 'Light sweep - Good weight';
     intensity = 'light';
-  } else if (time < 5.2) {
+  } else if (time < veryHeavy) {
     recommendation = 'Minimal sweep - Stone is heavy';
     intensity = 'light';
   } else {
@@ -239,7 +270,7 @@ function updateSweepingRecommendation(time, iceSpeed, position) {
     intensity = 'heavy';
   }
   
-  // Adjust for ice speed
+  // Add ice speed context
   if (iceSpeed < 4) {
     recommendation += ' (Slow ice)';
   } else if (iceSpeed > 7) {
@@ -484,9 +515,14 @@ window.addEventListener('scrollUp', () => {
   if (appState.currentView === 'settings') return;
   
   if (appState.adjustingPosition) {
-    // Adjust stone position
+    // Adjust stone position and recalculate time
     appState.currentStonePosition = Math.min(100, appState.currentStonePosition + 5);
+    
+    // Recalculate time based on new position and current ice speed
+    appState.currentShotTime = calculateTimeFromPosition(appState.currentStonePosition, appState.iceSpeed);
+    
     updateStoneIndicator(appState.currentStonePosition);
+    updateTimerDisplay(); // Update to show the new time
     updateSweepingRecommendation(appState.currentShotTime, appState.iceSpeed, appState.currentStonePosition);
   } else {
     // Adjust ice speed
@@ -500,9 +536,14 @@ window.addEventListener('scrollDown', () => {
   if (appState.currentView === 'settings') return;
   
   if (appState.adjustingPosition) {
-    // Adjust stone position
+    // Adjust stone position and recalculate time
     appState.currentStonePosition = Math.max(0, appState.currentStonePosition - 5);
+    
+    // Recalculate time based on new position and current ice speed
+    appState.currentShotTime = calculateTimeFromPosition(appState.currentStonePosition, appState.iceSpeed);
+    
     updateStoneIndicator(appState.currentStonePosition);
+    updateTimerDisplay(); // Update to show the new time
     updateSweepingRecommendation(appState.currentShotTime, appState.iceSpeed, appState.currentStonePosition);
   } else {
     // Adjust ice speed
