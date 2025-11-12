@@ -1,0 +1,34 @@
+{
+  "name": "Curling Timer X",
+  "package": "com.riveco.curlingtimer",
+  "version": "1.0.0",
+  "description": "A specialized curling timer application for tracking stone travel time from hog line to back line with ice speed tracking and sweeping recommendations",
+  "author": "RiveCo",
+  "homepage": "https://github.com/RiveCo/curlingTimerX",
+  "display": {
+    "orientation": "portrait",
+    "fullscreen": false,
+    "width": 240,
+    "height": 282
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "screenshots": [
+    "screenshot.jpg"
+  ],
+  "type": "web",
+  "entry": "index.html",
+  "permissions": [
+    "storage"
+  ],
+  "category": "sports",
+  "keywords": [
+    "curling",
+    "timer",
+    "sports",
+    "ice",
+    "tracking"
+  ],
+  "minRabbitVersion": "1.0.0"
+}

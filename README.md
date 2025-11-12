@@ -2,7 +2,68 @@
 
 A specialized curling timer application designed for the Rabbit R1 device with a 240x282 display.
 
-## Features
+## 🎯 Quick Start - Installing on Rabbit R1
+
+### Option 1: Install via QR Code (Recommended - Native App)
+
+This method installs the app as a native package on your Rabbit R1.
+
+1. **Generate a QR code** using one of these methods:
+
+   **Using Python (Best):**
+   ```bash
+   # Install dependency (one time)
+   pip install qrcode[pil]
+   
+   # Generate QR for version 1.0.0 (default)
+   python generate-qr.py
+   
+   # Or specify a different version
+   python generate-qr.py --version 1.0.1
+   ```
+
+   **Using Online Generator:**
+   - Visit [QR Code Generator](https://www.qr-code-generator.com/)
+   - Paste this URL:
+     ```
+     https://github.com/RiveCo/curlingTimerX/releases/download/v1.0.0/curling-timer-x-1.0.0.rabbit
+     ```
+   - Download the QR code
+
+2. **Scan with Rabbit R1**
+   - Open your Rabbit R1 camera or QR scanner
+   - Point it at the QR code
+   - The `.rabbit` package will download and install automatically
+
+3. **Launch the app** from your Rabbit R1 home screen!
+
+### Option 2: Web Access (Browser-Based)
+
+Access the app through the web browser without installation:
+
+1. **Generate QR for web access:**
+   ```bash
+   python generate-qr.py --web-only
+   ```
+   
+   Or visit: [QR Code Generator](https://www.qr-code-generator.com/) and use:
+   ```
+   https://riveco.github.io/curlingTimerX/
+   ```
+
+2. **Scan with Rabbit R1** - opens in browser
+3. **Bookmark** for quick future access
+
+## 📦 What's the Difference?
+
+| Method | Install Type | Updates | Offline | Performance |
+|--------|-------------|---------|---------|-------------|
+| **QR Code Install** | Native package | Manual (rescan QR) | Partially | Better |
+| **Web Access** | Browser-based | Automatic | No | Good |
+
+**Recommendation:** Use QR Code Install for the best experience. Use Web Access if you want automatic updates.
+
+## 🚀 Features
 
 - **Timer**: Precision timing from hog line to back line
 - **Ice Speed Tracking**: Adjust and record ice speed conditions (1-10 scale)
@@ -10,101 +71,7 @@ A specialized curling timer application designed for the Rabbit R1 device with a
 - **Shot History**: Track your last shots with detailed metrics
 - **Settings**: View ice speed history and average times
 
-## Accessing on Rabbit R1
-
-### Quick Setup
-
-Once deployed, your app will be available at:
-```
-https://riveco.github.io/curlingTimerX/
-```
-
-### Three Ways to Access on Rabbit R1
-
-#### Option 1: Generate QR Code Online (Easiest)
-1. Visit [QR Code Generator](https://www.qr-code-generator.com/)
-2. Paste your GitHub Pages URL: `https://riveco.github.io/curlingTimerX/`
-3. Download the QR code
-4. Scan it with your Rabbit R1's camera
-
-#### Option 2: Use Python Script
-```bash
-# Install dependency
-pip install qrcode[pil]
-
-# Generate QR code
-python generate-qr.py
-
-# Or with custom URL
-python generate-qr.py --url https://riveco.github.io/curlingTimerX/
-```
-
-#### Option 3: Direct URL Access
-Manually enter the URL in your Rabbit R1 browser:
-```
-https://riveco.github.io/curlingTimerX/
-```
-Then bookmark it for quick access!
-
-## Deployment
-
-### First-Time GitHub Pages Setup
-
-Before the automatic deployment works, you need to enable GitHub Pages:
-
-1. Go to your repository on GitHub: `https://github.com/RiveCo/curlingTimerX`
-2. Click on **Settings** (top navigation)
-3. Click on **Pages** in the left sidebar
-4. Under **Build and deployment**:
-   - **Source**: Select **"GitHub Actions"** (not "Deploy from a branch")
-5. Click **Save** if prompted
-
-That's it! Once this PR is merged to main/master, the workflow will automatically deploy your app.
-
-### Automatic Deployment
-
-This app is automatically deployed to GitHub Pages when changes are pushed to the main/master branch.
-
-The GitHub Actions workflow (`.github/workflows/deploy.yml`) will automatically:
-- Install dependencies
-- Build the Vite app
-- Deploy to GitHub Pages
-- Make it available at `https://riveco.github.io/curlingTimerX/`
-
-### Manual Deployment
-
-To manually trigger a deployment:
-1. Go to the "Actions" tab in your repository
-2. Select "Deploy to GitHub Pages"
-3. Click "Run workflow"
-
-## Development
-
-### Prerequisites
-
-- Node.js 20 or higher
-- npm
-
-### Local Development
-
-```bash
-cd apps/app
-npm install
-npm run dev
-```
-
-The app will be available at `http://localhost:5173`
-
-### Building
-
-```bash
-cd apps/app
-npm run build
-```
-
-The built files will be in `apps/app/dist/`
-
-## Device Controls
+## 🎮 Device Controls
 
 The app integrates with Rabbit R1's native controls:
 - **Side Button (Hold)**: Start/stop timer
@@ -113,41 +80,266 @@ The app integrates with Rabbit R1's native controls:
 
 See `apps/app/src/lib/device-controls.md` for detailed API documentation.
 
-## Updates
+## 📱 Accessing App Versions
 
-Once deployed via GitHub Pages:
-- Any changes pushed to the main/master branch will automatically update the live app
-- Users can refresh the page on their Rabbit R1 to get the latest version
-- No need to rescan the QR code for updates
+### Latest Release
+Always get the latest version:
+```
+https://github.com/RiveCo/curlingTimerX/releases/latest
+```
 
-## Troubleshooting
+### Specific Version
+Download a specific version (replace `1.0.0` with desired version):
+```
+https://github.com/RiveCo/curlingTimerX/releases/download/v1.0.0/curling-timer-x-1.0.0.rabbit
+```
 
-### Deployment Not Working?
+### Check for Updates
+Visit the [Releases page](https://github.com/RiveCo/curlingTimerX/releases) to see all available versions.
 
-1. **Check GitHub Actions**: Go to the "Actions" tab in your repository to see if the workflow ran
-2. **Verify Pages Settings**: Make sure "GitHub Actions" is selected as the source in Pages settings
-3. **Branch Name**: The workflow runs on `main` or `master` branch - make sure your PR is merged to one of these
-4. **Manual Trigger**: You can manually trigger the workflow from the Actions tab
+## 🔧 For Developers
 
-### Can't Access the App?
+### Prerequisites
+- Node.js 20 or higher
+- npm
+- Python 3 (for QR generation)
 
-1. **Wait for Deployment**: After merging, wait 1-2 minutes for the deployment to complete
-2. **Check URL**: Make sure you're using `https://riveco.github.io/curlingTimerX/` (lowercase, exact spelling)
-3. **Clear Cache**: Try opening in an incognito/private window on your Rabbit R1
+### Local Development
+```bash
+cd apps/app
+npm install
+npm run dev
+```
+The app will be available at `http://localhost:5173`
 
-### QR Code Not Scanning?
+### Building
+```bash
+cd apps/app
+npm run build
+```
+Built files will be in `apps/app/dist/`
 
-1. **Size**: Make sure the QR code is large enough (at least 200x200 pixels)
-2. **Contrast**: Ensure good contrast between the QR code and background
-3. **Lighting**: Scan in good lighting conditions
-4. **Alternative**: Use direct URL entry as a fallback
+### Creating a Release Package
 
-## Metadata
+Package the app for Rabbit R1 distribution:
 
-App metadata for Rabbit R1:
-- **Icon**: `metadata/icon.png` (128x128)
-- **Screenshot**: `metadata/screenshot.jpg` (240x282)
+```bash
+# Build and package (version defaults to 1.0.0)
+./package-rabbit.sh
 
-## License
+# Or specify version
+./package-rabbit.sh 1.0.1
+```
+
+This creates:
+- `release/curling-timer-x-VERSION.rabbit` - The installable package
+- `release/curling-timer-x-VERSION.rabbit.sha256` - SHA256 checksum
+- `release/curling-timer-x-VERSION.rabbit.md5` - MD5 checksum
+
+### Automated Releases via GitHub Actions
+
+#### Method 1: Tag-Based Release (Recommended)
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions will automatically:
+1. Build the app
+2. Package it as a `.rabbit` bundle
+3. Create a GitHub release
+4. Upload the package and checksums
+
+#### Method 2: Manual Workflow Dispatch
+1. Go to **Actions** tab in GitHub
+2. Select **"Create Release"** workflow
+3. Click **"Run workflow"**
+4. Enter the version number (e.g., `1.0.0`)
+5. Click **"Run workflow"**
+
+### Package Structure
+
+The `.rabbit` package contains:
+```
+curling-timer-x-VERSION.rabbit/
+├── manifest.json       # App metadata (name, version, permissions)
+├── index.html          # Main app entry point
+├── assets/             # JavaScript and CSS assets
+│   ├── main-*.js
+│   └── main-*.css
+├── icon.png            # App icon (128x128)
+├── screenshot.jpg      # App screenshot (240x282)
+└── README.txt          # Installation instructions
+```
+
+### Manifest File
+
+The `.rabbit/manifest.json` file contains app metadata:
+```json
+{
+  "name": "Curling Timer X",
+  "package": "com.riveco.curlingtimer",
+  "version": "1.0.0",
+  "description": "A specialized curling timer application...",
+  "type": "web",
+  "entry": "index.html",
+  "display": {
+    "width": 240,
+    "height": 282,
+    "orientation": "portrait"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "permissions": ["storage"]
+}
+```
+
+## 🌐 GitHub Pages Deployment
+
+The app is also automatically deployed to GitHub Pages for web access.
+
+### Setup (One-Time)
+1. Go to **Settings** → **Pages**
+2. Under **Build and deployment**:
+   - Set **Source** to **"GitHub Actions"**
+3. Save
+
+### Automatic Deployment
+When changes are pushed to `main` or `master` branch:
+- GitHub Actions builds the app
+- Deploys to: `https://riveco.github.io/curlingTimerX/`
+- Available within 1-2 minutes
+
+### Manual Deployment
+1. Go to **Actions** tab
+2. Select **"Deploy to GitHub Pages"**
+3. Click **"Run workflow"**
+
+## 🐛 Troubleshooting
+
+### Installation Issues
+
+**QR code scanning but nothing happens?**
+- Ensure you're using the correct URL format (should end with `.rabbit`)
+- Check that the release exists on GitHub
+- Try the web access method as a fallback
+
+**"File not found" or 404 error?**
+- Verify the version number in the URL matches an existing release
+- Check the [Releases page](https://github.com/RiveCo/curlingTimerX/releases)
+- Use `latest` in the URL to always get the newest version
+
+**Download starts but won't install?**
+- Ensure your Rabbit R1 supports `.rabbit` packages
+- Check if sideloading is enabled on your device
+- Try reinstalling by clearing cache and rescanning
+
+### Web Access Issues
+
+**Can't access GitHub Pages URL?**
+- Wait 1-2 minutes after deployment for changes to propagate
+- Check the Actions tab to verify deployment succeeded
+- Try accessing in incognito/private mode
+- Clear your browser cache
+
+**App loads but doesn't work properly?**
+- Hard refresh the page (Ctrl+Shift+R or Cmd+Shift+R)
+- Check browser console for errors
+- Ensure JavaScript is enabled
+
+### QR Code Issues
+
+**QR code won't scan?**
+- Ensure the QR code is large enough (at least 200x200 pixels)
+- Check for good contrast (black on white background)
+- Try scanning in better lighting conditions
+- Hold the R1 steady and at appropriate distance
+
+**Generated wrong QR code?**
+```bash
+# For app installation
+python generate-qr.py --version 1.0.0
+
+# For web access only
+python generate-qr.py --web-only
+
+# Custom URL
+python generate-qr.py --url "https://your-custom-url.com"
+```
+
+### Build/Development Issues
+
+**Build fails?**
+```bash
+# Clean install dependencies
+cd apps/app
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+**Packaging script fails?**
+```bash
+# Ensure build exists first
+cd apps/app && npm run build && cd ../..
+
+# Then package
+./package-rabbit.sh 1.0.0
+```
+
+**GitHub Actions workflow fails?**
+- Check that GitHub Pages is enabled with "GitHub Actions" as source
+- Verify Node.js 20 is compatible
+- Check the Actions tab for detailed error logs
+
+## 📚 Additional Documentation
+
+- **Device Controls**: See `apps/app/src/lib/device-controls.md`
+- **Flutter Channel API**: See `apps/app/src/lib/flutter-channel.md`
+- **UI Design Guide**: See `apps/app/src/lib/ui-design.md`
+- **Quick Setup**: See `SETUP.md`
+- **Implementation Details**: See `IMPLEMENTATION.md`
+
+## 🔒 Security
+
+- CodeQL security scanning enabled
+- No credentials or secrets in code
+- Checksums provided for package verification
+- Uses official GitHub Actions only
+
+## 📄 License
 
 MIT
+
+---
+
+## 🆘 Need Help?
+
+1. **Check the Troubleshooting section above**
+2. **Review existing [Issues](https://github.com/RiveCo/curlingTimerX/issues)**
+3. **Create a new Issue** with:
+   - What you're trying to do
+   - What's happening instead
+   - Error messages (if any)
+   - Screenshots (if applicable)
+   - Your Rabbit R1 firmware version
+
+## 🎯 Summary
+
+**For Rabbit R1 Users:**
+1. Run: `python generate-qr.py`
+2. Scan the QR code
+3. App installs automatically!
+
+**For Web Access:**
+1. Run: `python generate-qr.py --web-only`
+2. Scan the QR code
+3. App opens in browser!
+
+**For Developers:**
+1. Make changes
+2. Push tag: `git tag v1.0.1 && git push origin v1.0.1`
+3. GitHub automatically creates release
+4. Users get updated `.rabbit` package!

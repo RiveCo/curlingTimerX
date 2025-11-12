@@ -1,0 +1,168 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/app/package-lock.json
+
+      - name: Install dependencies
+        run: cd apps/app && npm ci
+
+      - name: Build app
+        run: cd apps/app && npm run build
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "TAG=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Package Rabbit R1 app
+        run: |
+          chmod +x package-rabbit.sh
+          ./package-rabbit.sh ${{ steps.version.outputs.VERSION }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          release_name: Curling Timer X ${{ steps.version.outputs.TAG }}
+          body: |
+            # Curling Timer X ${{ steps.version.outputs.TAG }}
+            
+            ## Installation on Rabbit R1
+            
+            ### Method 1: Direct Download (Recommended)
+            1. Download the `.rabbit` package from the assets below
+            2. Generate a QR code pointing to the download URL:
+               ```
+               https://github.com/RiveCo/curlingTimerX/releases/download/${{ steps.version.outputs.TAG }}/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit
+               ```
+            3. Scan the QR code with your Rabbit R1 camera
+            4. The app will be installed automatically
+            
+            ### Method 2: GitHub Pages (Web Access)
+            Alternatively, access via web browser:
+            ```
+            https://riveco.github.io/curlingTimerX/
+            ```
+            
+            ## What's Included
+            - ✅ Full app package with manifest
+            - ✅ App icon and screenshots
+            - ✅ Checksums for verification
+            - ✅ Installation instructions
+            
+            ## Features
+            - **Timer**: Precision timing from hog line to back line
+            - **Ice Speed Tracking**: Adjust and record ice speed conditions (1-10 scale)
+            - **Sweeping Recommendations**: Real-time guidance based on stone position and ice speed
+            - **Shot History**: Track your last shots with detailed metrics
+            - **Settings**: View ice speed history and average times
+            
+            ## Device Controls
+            - **Side Button (Hold)**: Start/stop timer
+            - **Scroll Wheel**: Adjust ice speed
+            - **Screen Tap**: Record shot and reset
+            
+            ## Files in this Release
+            - `curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit` - Main app package (installable)
+            - `curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.sha256` - SHA256 checksum
+            - `curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.md5` - MD5 checksum
+            
+            ## Generate QR Code
+            
+            Use any QR code generator and point it to:
+            ```
+            https://github.com/RiveCo/curlingTimerX/releases/download/${{ steps.version.outputs.TAG }}/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit
+            ```
+            
+            Or use the included Python script:
+            ```bash
+            python generate-qr.py --url "https://github.com/RiveCo/curlingTimerX/releases/download/${{ steps.version.outputs.TAG }}/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit"
+            ```
+            
+            ## Troubleshooting
+            
+            **Can't install the app?**
+            - Make sure you're downloading the `.rabbit` file, not viewing the GitHub page
+            - Verify the QR code points to the direct download URL (should end with `.rabbit`)
+            - Try accessing via GitHub Pages URL as an alternative
+            
+            **App not working?**
+            - Clear your Rabbit R1 cache
+            - Try reinstalling by scanning the QR code again
+            - Check for updates in this repository
+          draft: false
+          prerelease: false
+
+      - name: Upload .rabbit package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit
+          asset_name: curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit
+          asset_content_type: application/zip
+
+      - name: Upload SHA256 checksum
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.sha256
+          asset_name: curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.sha256
+          asset_content_type: text/plain
+
+      - name: Upload MD5 checksum
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.md5
+          asset_name: curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.md5
+          asset_content_type: text/plain
+
+      - name: Display success message
+        run: |
+          echo "✅ Release created successfully!"
+          echo ""
+          echo "📦 Package: curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit"
+          echo "🔗 Download URL:"
+          echo "https://github.com/RiveCo/curlingTimerX/releases/download/${{ steps.version.outputs.TAG }}/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit"
+          echo ""
+          echo "🎯 Next: Generate QR code pointing to the download URL above"
