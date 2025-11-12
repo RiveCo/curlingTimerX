@@ -1,47 +1,106 @@
 # Quick Setup Guide for Rabbit R1
 
-## 🚀 Getting Started (3 Steps!)
+## ⚠️ Important: Creation Code Requirement
 
-### Step 1: Generate QR Code
+**Native app installation requires an official Rabbit "creation code"** from Rabbit's developer portal. If you see "Not a valid creation code" when scanning a QR code, this is expected.
+
+**Current Recommendation: Use Web Access (Works Now!)**
+
+For full details, see [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md)
+
+---
+
+## 🚀 Getting Started (2 Steps!)
+
+### Step 1: Generate QR Code for Web Access
 
 ```bash
 # Install dependency (one time only)
 pip install qrcode[pil]
 
-# Generate QR code
-python generate-qr.py
+# Generate QR code for web access (RECOMMENDED)
+python generate-qr.py --web-only
 ```
 
 This creates `curling-timer-qr.png` in your current directory.
 
-### Step 2: Scan with Rabbit R1
+### Step 2: Scan and Use!
 
 1. Open your Rabbit R1
 2. Open camera or QR scanner
 3. Point at the QR code
-4. The app will download and install automatically!
+4. App opens in browser - full functionality available!
+5. Bookmark for easy future access
 
-### Step 3: Use the App!
+---
 
-The app is now installed on your Rabbit R1.
+## 📱 Native Installation (Not Available Yet)
+
+Native installation via QR code requires:
+1. App registration in Rabbit's developer portal
+2. App review and approval by Rabbit
+3. Official creation code from Rabbit
+
+**Status:** We're working on this. Use web access in the meantime!
+
+<details>
+<summary>🔮 Future Native Installation Steps</summary>
+
+Once we have an official creation code:
+
+```bash
+# Generate QR for native installation
+python generate-qr.py
+```
+
+Then scan with Rabbit R1 to install as a native app.
+
+</details>
+
+---
+
+## 📋 Using the App
 
 **Controls:**
 - **Hold Side Button**: Start/stop timer
 - **Scroll Wheel**: Adjust ice speed
 - **Tap Screen**: Record shot
 
+**Access Methods:**
+- ✅ **Web Browser** (Works Now): Full functionality
+- ⏳ **Native App** (Coming Soon): After developer approval
+
 ---
 
-## 📋 Alternative: Web Access Only
+## ❓ Common Questions
 
-If you prefer to use the app in the browser without installing:
+### Why doesn't the QR code work for installation?
 
+Rabbit R1 requires official "creation codes" from their developer portal for native app installation. Regular download URLs won't work. Use web access instead - it has full functionality!
+
+### Can I use the app now?
+
+Yes! Use web access:
 ```bash
-# Generate QR for web access
 python generate-qr.py --web-only
 ```
 
-Then scan the QR code to open in your Rabbit R1 browser.
+### When will native installation work?
+
+After we:
+1. Register with Rabbit's developer portal
+2. Submit the app for review
+3. Get approval and creation code
+
+See [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md) for details.
+
+---
+
+## 📖 More Information
+
+- **Creation Codes**: [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md)
+- **Full Documentation**: [README.md](README.md)
+- **Implementation**: [IMPLEMENTATION.md](IMPLEMENTATION.md)
 
 ---
 
