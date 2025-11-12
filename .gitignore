@@ -1,6 +1,7 @@
 # Generated QR codes
 *.png
 !metadata/*.png
+!.rabbit/*.png
 
 # Python
 __pycache__/
