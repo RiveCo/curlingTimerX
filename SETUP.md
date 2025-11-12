@@ -1,71 +1,218 @@
 # Quick Setup Guide for Rabbit R1
 
-## Step 1: Enable GitHub Pages
+## 🚀 Getting Started (3 Steps!)
 
-1. Go to https://github.com/RiveCo/curlingTimerX/settings/pages
-2. Under **"Build and deployment"**:
-   - Set **Source** to **"GitHub Actions"**
-3. Click Save
+### Step 1: Generate QR Code
 
-## Step 2: Merge This PR
-
-Once this pull request is merged to the main branch, GitHub Actions will automatically:
-- Build the app
-- Deploy it to GitHub Pages
-- Make it available at: `https://riveco.github.io/curlingTimerX/`
-
-## Step 3: Generate QR Code
-
-### Option A: Online (Easiest)
-1. Go to https://www.qr-code-generator.com/
-2. Paste: `https://riveco.github.io/curlingTimerX/`
-3. Download the QR code image
-4. Print or display it
-
-### Option B: Use Python Script
 ```bash
+# Install dependency (one time only)
 pip install qrcode[pil]
+
+# Generate QR code
 python generate-qr.py
 ```
 
-### Option C: Alternative QR Generators
-- https://www.the-qrcode-generator.com/
-- https://qr.io/
-- https://goqr.me/
+This creates `curling-timer-qr.png` in your current directory.
 
-## Step 4: Scan with Rabbit R1
+### Step 2: Scan with Rabbit R1
 
 1. Open your Rabbit R1
-2. Open the camera or QR scanner
-3. Point it at the QR code
-4. The Curling Timer app will open!
+2. Open camera or QR scanner
+3. Point at the QR code
+4. The app will download and install automatically!
 
-## Step 5: Bookmark (Optional)
+### Step 3: Use the App!
 
-After opening the app, bookmark it in your Rabbit R1 browser for quick access without the QR code.
+The app is now installed on your Rabbit R1.
 
-## Updates
+**Controls:**
+- **Hold Side Button**: Start/stop timer
+- **Scroll Wheel**: Adjust ice speed
+- **Tap Screen**: Record shot
 
-When you push changes to the main branch:
-- The app automatically updates on GitHub Pages
-- Just refresh the page on your Rabbit R1 to get updates
-- No need to rescan or regenerate the QR code
+---
 
-## Troubleshooting
+## 📋 Alternative: Web Access Only
 
-**Deployment failed?**
-- Check the "Actions" tab in your GitHub repository
-- Make sure GitHub Pages is set to "GitHub Actions" as the source
+If you prefer to use the app in the browser without installing:
 
-**Can't access the URL?**
-- Wait 1-2 minutes after merging for deployment to complete
-- Check the Actions tab to see if deployment succeeded
+```bash
+# Generate QR for web access
+python generate-qr.py --web-only
+```
 
-**QR code won't scan?**
-- Ensure the QR code is large enough (at least 200x200px)
-- Make sure there's good lighting
-- Try the direct URL entry as backup
+Then scan the QR code to open in your Rabbit R1 browser.
 
-## Need Help?
+---
 
-Check the full README.md for detailed documentation and troubleshooting tips.
+## 🔄 Creating a New Release (For Developers)
+
+### Method 1: Using Git Tags (Automatic)
+
+```bash
+# Create and push a version tag
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+GitHub Actions will automatically:
+- Build the app
+- Create `.rabbit` package  
+- Create GitHub release with downloadable assets
+
+### Method 2: Manual Release
+
+1. Build the app:
+   ```bash
+   cd apps/app
+   npm install
+   npm run build
+   cd ../..
+   ```
+
+2. Package for Rabbit R1:
+   ```bash
+   ./package-rabbit.sh 1.0.1
+   ```
+
+3. Upload to GitHub Releases:
+   - Go to **Releases** → **Create new release**
+   - Tag: `v1.0.1`
+   - Upload `release/curling-timer-x-1.0.1.rabbit`
+   - Publish release
+
+4. Generate QR code:
+   ```bash
+   python generate-qr.py --version 1.0.1
+   ```
+
+### Method 3: GitHub Actions UI
+
+1. Go to **Actions** tab
+2. Select **"Create Release"**
+3. Click **"Run workflow"**
+4. Enter version (e.g., `1.0.1`)
+5. Click **"Run workflow"**
+
+Wait 2-3 minutes for the release to be created automatically.
+
+---
+
+## 📦 What Gets Created
+
+When you create a release, users get:
+
+- `curling-timer-x-VERSION.rabbit` - Installable app package
+- `curling-timer-x-VERSION.rabbit.sha256` - Security checksum
+- `curling-timer-x-VERSION.rabbit.md5` - Alternative checksum
+
+---
+
+## 🔗 URLs to Remember
+
+### For App Installation
+```
+https://github.com/RiveCo/curlingTimerX/releases/download/v1.0.0/curling-timer-x-1.0.0.rabbit
+```
+
+### For Web Access
+```
+https://riveco.github.io/curlingTimerX/
+```
+
+### Latest Release
+```
+https://github.com/RiveCo/curlingTimerX/releases/latest
+```
+
+---
+
+## ⚙️ One-Time Setup (GitHub Pages)
+
+To enable automatic web deployment:
+
+1. Go to repository **Settings**
+2. Click **Pages** in the left sidebar
+3. Under **Build and deployment**:
+   - Set **Source** to **"GitHub Actions"**
+4. Save
+
+Now every push to `main`/`master` auto-deploys to GitHub Pages!
+
+---
+
+## 🐛 Common Issues
+
+### QR code won't scan?
+- Make sure it's large enough (200x200px minimum)
+- Ensure good lighting
+- Try generating a larger QR: `python generate-qr.py` (default size works well)
+
+### App won't install?
+- Verify the release exists on GitHub
+- Check URL points to `.rabbit` file
+- Try web access method instead: `python generate-qr.py --web-only`
+
+### Release workflow failed?
+- Check **Actions** tab for error details
+- Ensure GitHub Pages is configured
+- Verify you pushed a tag (not just committed)
+
+### Python script error?
+```bash
+# Install/reinstall dependencies
+pip install --upgrade qrcode[pil]
+```
+
+---
+
+## 📱 QR Code Examples
+
+### For Installation (Recommended)
+```bash
+python generate-qr.py --version 1.0.0
+```
+This creates a QR that downloads and installs the app.
+
+### For Web Access
+```bash
+python generate-qr.py --web-only
+```
+This creates a QR that opens the app in browser.
+
+### Custom URL
+```bash
+python generate-qr.py --url "https://your-custom-url.com" --output custom-qr.png
+```
+
+---
+
+## 🎯 Quick Reference
+
+| Task | Command |
+|------|---------|
+| Generate install QR | `python generate-qr.py` |
+| Generate web QR | `python generate-qr.py --web-only` |
+| Create release | `git tag v1.0.1 && git push origin v1.0.1` |
+| Package app | `./package-rabbit.sh 1.0.1` |
+| Build app | `cd apps/app && npm run build` |
+
+---
+
+## 📖 More Documentation
+
+- **Full README**: See `README.md` for comprehensive docs
+- **Implementation**: See `IMPLEMENTATION.md` for technical details
+- **Device Controls**: See `apps/app/src/lib/device-controls.md`
+
+---
+
+## ✅ Success Checklist
+
+- [ ] Python and qrcode installed
+- [ ] Generated QR code with `python generate-qr.py`
+- [ ] Scanned QR with Rabbit R1
+- [ ] App installed and working
+- [ ] Tested timer functionality
+
+**Need help?** See the [full README](README.md) or create an [Issue](https://github.com/RiveCo/curlingTimerX/issues).

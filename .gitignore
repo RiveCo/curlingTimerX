@@ -18,6 +18,12 @@ node_modules/
 dist/
 dist-ssr/
 
+# Release packages
+release/
+*.rabbit
+*.sha256
+*.md5
+
 # OS
 .DS_Store
 Thumbs.db
