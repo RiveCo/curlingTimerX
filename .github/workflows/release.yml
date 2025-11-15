@@ -50,6 +50,19 @@ jobs:
           chmod +x package-rabbit.sh
           ./package-rabbit.sh ${{ steps.version.outputs.VERSION }}
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install qrcode[pil]
+
+      - name: Generate QR code from metadata
+        run: |
+          chmod +x generate-rabbit-qr.py
+          python3 generate-rabbit-qr.py --output release/curling-timer-rabbit-qr.png
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -157,6 +170,16 @@ jobs:
           asset_name: curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit.md5
           asset_content_type: text/plain
 
+      - name: Upload QR code
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/curling-timer-rabbit-qr.png
+          asset_name: curling-timer-rabbit-qr.png
+          asset_content_type: image/png
+
       - name: Display success message
         run: |
           echo "✅ Release created successfully!"
@@ -165,4 +188,6 @@ jobs:
           echo "🔗 Download URL:"
           echo "https://github.com/RiveCo/curlingTimerX/releases/download/${{ steps.version.outputs.TAG }}/curling-timer-x-${{ steps.version.outputs.VERSION }}.rabbit"
           echo ""
-          echo "🎯 Next: Generate QR code pointing to the download URL above"
+          echo "📱 QR Code: curling-timer-rabbit-qr.png"
+          echo "   This QR code points to GitHub Pages: https://riveco.github.io/curlingTimerX/"
+          echo "   Scan with Rabbit R1 to access the app!"

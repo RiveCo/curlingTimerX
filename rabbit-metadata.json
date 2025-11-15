@@ -1,0 +1,9 @@
+{
+  "title": "Curling Timer X",
+  "url": "https://riveco.github.io/curlingTimerX/",
+  "description": "A specialized curling timer application for tracking stone travel time from hog line to back line with ice speed tracking and sweeping recommendations",
+  "iconUrl": "https://raw.githubusercontent.com/RiveCo/curlingTimerX/main/metadata/icon.png",
+  "themeColor": "#667eea",
+  "author": "RiveCo",
+  "screenshotUrl": "https://raw.githubusercontent.com/RiveCo/curlingTimerX/main/metadata/screenshot.jpg"
+}

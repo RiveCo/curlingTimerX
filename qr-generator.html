@@ -67,6 +67,22 @@
             border-color: #667eea;
         }
         
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -159,8 +175,55 @@
         <p class="subtitle">Generate a QR code for your Rabbit R1 device</p>
         
         <div class="input-group">
-            <label for="url">App URL:</label>
-            <input type="text" id="url" value="https://riveco.github.io/curlingTimerX/" placeholder="Enter your GitHub Pages URL">
+            <label for="mode">QR Code Mode:</label>
+            <select id="mode" onchange="updateMode()">
+                <option value="json">Rabbit R1 Metadata (JSON)</option>
+                <option value="url">Simple URL</option>
+            </select>
+        </div>
+        
+        <div id="jsonMode">
+            <div class="input-group">
+                <label for="title">App Title:</label>
+                <input type="text" id="title" value="Curling Timer X" placeholder="Enter app title">
+            </div>
+            
+            <div class="input-group">
+                <label for="url">App URL:</label>
+                <input type="text" id="url" value="https://riveco.github.io/curlingTimerX/" placeholder="Enter your GitHub Pages URL">
+            </div>
+            
+            <div class="input-group">
+                <label for="description">Description:</label>
+                <input type="text" id="description" value="A specialized curling timer application for tracking stone travel time from hog line to back line with ice speed tracking and sweeping recommendations" placeholder="Enter app description">
+            </div>
+            
+            <div class="input-group">
+                <label for="author">Author:</label>
+                <input type="text" id="author" value="RiveCo" placeholder="Enter author name">
+            </div>
+            
+            <div class="input-group">
+                <label for="themeColor">Theme Color:</label>
+                <input type="text" id="themeColor" value="#667eea" placeholder="#667eea">
+            </div>
+            
+            <div class="input-group">
+                <label for="iconUrl">Icon URL (optional):</label>
+                <input type="text" id="iconUrl" value="https://raw.githubusercontent.com/RiveCo/curlingTimerX/main/metadata/icon.png" placeholder="Enter icon URL">
+            </div>
+            
+            <div class="input-group">
+                <label for="screenshotUrl">Screenshot URL (optional):</label>
+                <input type="text" id="screenshotUrl" value="https://raw.githubusercontent.com/RiveCo/curlingTimerX/main/metadata/screenshot.jpg" placeholder="Enter screenshot URL">
+            </div>
+        </div>
+        
+        <div id="urlMode" style="display: none;">
+            <div class="input-group">
+                <label for="simpleUrl">App URL:</label>
+                <input type="text" id="simpleUrl" value="https://riveco.github.io/curlingTimerX/" placeholder="Enter your URL">
+            </div>
         </div>
         
         <button onclick="generateQR()">Generate QR Code</button>
@@ -172,32 +235,83 @@
         <div class="instructions">
             <h2>📱 How to use on Rabbit R1:</h2>
             <ol>
+                <li>Select the QR Code Mode (Rabbit R1 Metadata recommended)</li>
+                <li>Fill in the app details if using JSON mode</li>
                 <li>Click "Generate QR Code" above</li>
                 <li>Print or display this QR code on your screen</li>
                 <li>Open the camera or QR scanner on your Rabbit R1</li>
                 <li>Point it at the QR code</li>
-                <li>The Curling Timer app will open in your browser</li>
-                <li>Bookmark the page for quick access later</li>
+                <li>The Curling Timer app will open or install</li>
+            </ol>
+            
+            <h2 style="margin-top: 20px;">🔧 QR Code Modes:</h2>
+            <ol>
+                <li><strong>Rabbit R1 Metadata (JSON):</strong> Contains full app information including title, description, icon, and screenshot URLs. Recommended for Rabbit R1 devices.</li>
+                <li><strong>Simple URL:</strong> Just encodes the URL. Compatible with any QR scanner.</li>
             </ol>
             
             <h2 style="margin-top: 20px;">🌐 Alternative Options:</h2>
             <ol>
-                <li><strong>Online QR Generator:</strong> Visit <a href="https://www.qr-code-generator.com/" target="_blank" style="color: #667eea;">qr-code-generator.com</a> and paste your URL</li>
-                <li><strong>Python Script:</strong> Use the included <code>generate-qr.py</code> script</li>
+                <li><strong>Python Script:</strong> Use the included <code>generate-rabbit-qr.py</code> script</li>
+                <li><strong>Command Line:</strong> Run <code>python3 generate-rabbit-qr.py</code> to generate from <code>rabbit-metadata.json</code></li>
                 <li><strong>Direct URL:</strong> Manually enter the URL on your Rabbit R1 browser</li>
             </ol>
         </div>
     </div>
     
     <script>
+        function updateMode() {
+            const mode = document.getElementById('mode').value;
+            const jsonMode = document.getElementById('jsonMode');
+            const urlMode = document.getElementById('urlMode');
+            
+            if (mode === 'json') {
+                jsonMode.style.display = 'block';
+                urlMode.style.display = 'none';
+            } else {
+                jsonMode.style.display = 'none';
+                urlMode.style.display = 'block';
+            }
+        }
+        
         function generateQR() {
-            const url = document.getElementById('url').value.trim();
+            const mode = document.getElementById('mode').value;
             const qrcodeContainer = document.getElementById('qrcode');
             const downloadBtn = document.getElementById('downloadBtn');
             
-            if (!url) {
-                alert('Please enter a valid URL');
-                return;
+            let qrContent;
+            
+            if (mode === 'json') {
+                // Build JSON metadata
+                const metadata = {
+                    title: document.getElementById('title').value.trim(),
+                    url: document.getElementById('url').value.trim(),
+                    description: document.getElementById('description').value.trim(),
+                    author: document.getElementById('author').value.trim(),
+                    themeColor: document.getElementById('themeColor').value.trim()
+                };
+                
+                const iconUrl = document.getElementById('iconUrl').value.trim();
+                const screenshotUrl = document.getElementById('screenshotUrl').value.trim();
+                
+                if (iconUrl) metadata.iconUrl = iconUrl;
+                if (screenshotUrl) metadata.screenshotUrl = screenshotUrl;
+                
+                if (!metadata.title || !metadata.url || !metadata.description) {
+                    alert('Please fill in all required fields (title, url, description)');
+                    return;
+                }
+                
+                qrContent = JSON.stringify(metadata);
+                console.log('Generated metadata:', metadata);
+            } else {
+                // Simple URL mode
+                const url = document.getElementById('simpleUrl').value.trim();
+                if (!url) {
+                    alert('Please enter a valid URL');
+                    return;
+                }
+                qrContent = url;
             }
             
             // Clear previous content
@@ -205,7 +319,7 @@
             
             // Create an iframe that uses Google Charts API to generate QR code
             const size = 256;
-            const qrApiUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(url)}&chs=${size}x${size}&chld=M|0`;
+            const qrApiUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(qrContent)}&chs=${size}x${size}&chld=M|0`;
             
             const img = document.createElement('img');
             img.src = qrApiUrl;

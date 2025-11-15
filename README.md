@@ -63,13 +63,31 @@ If you scan a QR code and see "Not a valid creation code":
 Access the app through the web browser without waiting for developer approval:
 
 1. **Generate QR for web access:**
+   
+   **Method 1: Python Script with Rabbit R1 Metadata (Recommended)**
+   ```bash
+   # Install dependency (one time)
+   pip install qrcode[pil]
+   
+   # Generate QR code with full Rabbit R1 metadata
+   python generate-rabbit-qr.py
+   ```
+   This generates a QR code containing JSON metadata that includes:
+   - App title and description
+   - GitHub Pages URL
+   - Icon and screenshot URLs
+   - Theme color and author info
+   
+   **Method 2: Web-Based Generator**
+   - Open `qr-generator.html` in your browser
+   - Select "Rabbit R1 Metadata (JSON)" mode
+   - Fill in or modify the app details
+   - Click "Generate QR Code"
+   - Download or scan directly
+   
+   **Method 3: Legacy Web-Only URL**
    ```bash
    python generate-qr.py --web-only
-   ```
-   
-   Or visit: [QR Code Generator](https://www.qr-code-generator.com/) and use:
-   ```
-   https://riveco.github.io/curlingTimerX/
    ```
 
 2. **Scan with Rabbit R1** - opens in browser instantly
@@ -296,15 +314,23 @@ When changes are pushed to `main` or `master` branch:
 
 **Generated wrong QR code?**
 ```bash
-# For app installation
-python generate-qr.py --version 1.0.0
+# For Rabbit R1 with full metadata (Recommended)
+python generate-rabbit-qr.py
 
-# For web access only
+# For web access only (legacy)
 python generate-qr.py --web-only
+
+# For app installation (requires creation code)
+python generate-qr.py --version 1.0.0
 
 # Custom URL
 python generate-qr.py --url "https://your-custom-url.com"
 ```
+
+**Need to customize the QR code metadata?**
+- Edit `rabbit-metadata.json` to change app details
+- Or use `qr-generator.html` for a visual editor
+- Run `python generate-rabbit-qr.py` to regenerate
 
 ### Build/Development Issues
 
