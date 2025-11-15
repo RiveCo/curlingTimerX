@@ -2,11 +2,31 @@
 
 A specialized curling timer application designed for the Rabbit R1 device with a 240x282 display.
 
+## ⚠️ Important Notice - Creation Code Requirement
+
+**Native app installation via QR code requires a Rabbit R1 "creation code" from Rabbit's developer portal.**
+
+If you scan a QR code and see "Not a valid creation code":
+- This is expected - the app needs to be registered with Rabbit first
+- **Current workaround:** Use web access instead (see Option 2 below)
+- **For details:** See [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md) for complete explanation
+
 ## 🎯 Quick Start - Installing on Rabbit R1
 
-### Option 1: Install via QR Code (Recommended - Native App)
+### Option 1: Install via QR Code (Native App) - ⚠️ Requires Creation Code
 
-This method installs the app as a native package on your Rabbit R1.
+**STATUS: NOT YET AVAILABLE** - This method requires an official Rabbit creation code.
+
+⚠️ **Why it doesn't work yet:**
+- Rabbit R1 requires apps to be registered in their developer portal
+- Apps must receive approval and be assigned a "creation code"
+- Regular download URL QR codes show "Not a valid creation code" error
+- See [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md) for full details
+
+**We're working on getting official approval. In the meantime, use Option 2 below.**
+
+<details>
+<summary>📋 Future Installation Steps (Once We Have Creation Code)</summary>
 
 1. **Generate a QR code** using one of these methods:
 
@@ -24,22 +44,23 @@ This method installs the app as a native package on your Rabbit R1.
 
    **Using Online Generator:**
    - Visit [QR Code Generator](https://www.qr-code-generator.com/)
-   - Paste this URL:
-     ```
-     https://github.com/RiveCo/curlingTimerX/releases/download/v1.0.0/curling-timer-x-1.0.0.rabbit
-     ```
+   - Use the official creation code provided after approval
    - Download the QR code
 
 2. **Scan with Rabbit R1**
    - Open your Rabbit R1 camera or QR scanner
    - Point it at the QR code
-   - The `.rabbit` package will download and install automatically
+   - The app will install automatically
 
 3. **Launch the app** from your Rabbit R1 home screen!
 
-### Option 2: Web Access (Browser-Based)
+</details>
 
-Access the app through the web browser without installation:
+### Option 2: Web Access (Recommended - Works Now!)
+
+**✅ CURRENTLY WORKING** - Use this method for immediate access!
+
+Access the app through the web browser without waiting for developer approval:
 
 1. **Generate QR for web access:**
    ```bash
@@ -51,17 +72,20 @@ Access the app through the web browser without installation:
    https://riveco.github.io/curlingTimerX/
    ```
 
-2. **Scan with Rabbit R1** - opens in browser
+2. **Scan with Rabbit R1** - opens in browser instantly
 3. **Bookmark** for quick future access
+4. **Full functionality** - Same features as native app!
 
 ## 📦 What's the Difference?
 
-| Method | Install Type | Updates | Offline | Performance |
-|--------|-------------|---------|---------|-------------|
-| **QR Code Install** | Native package | Manual (rescan QR) | Partially | Better |
-| **Web Access** | Browser-based | Automatic | No | Good |
+| Method | Install Type | Status | Updates | Offline | Performance |
+|--------|-------------|--------|---------|---------|-------------|
+| **QR Code Install** | Native package | ⚠️ Not Available Yet* | Manual (rescan QR) | Partially | Better |
+| **Web Access** | Browser-based | ✅ Works Now! | Automatic | No | Good |
 
-**Recommendation:** Use QR Code Install for the best experience. Use Web Access if you want automatic updates.
+**Recommendation:** Use **Web Access** for immediate use. We're working on getting the app approved for native installation.
+
+\* Requires official Rabbit creation code - see [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md)
 
 ## 🚀 Features
 
@@ -219,22 +243,35 @@ When changes are pushed to `main` or `master` branch:
 
 ## 🐛 Troubleshooting
 
+### Creation Code Issues
+
+**"Not a valid creation code" error?**
+- This is expected - Rabbit R1 requires official creation codes from their developer portal
+- Apps must be registered and approved by Rabbit before native installation works
+- **Solution:** Use web access instead - it works immediately!
+  ```bash
+  python generate-qr.py --web-only
+  ```
+- For full explanation, see [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md)
+
 ### Installation Issues
 
 **QR code scanning but nothing happens?**
-- Ensure you're using the correct URL format (should end with `.rabbit`)
-- Check that the release exists on GitHub
-- Try the web access method as a fallback
+- If trying native installation: See "Creation Code Issues" above
+- If using web access: Ensure you're using the correct GitHub Pages URL
+- Try the web access method as a fallback: `python generate-qr.py --web-only`
 
 **"File not found" or 404 error?**
-- Verify the version number in the URL matches an existing release
+- For native install: Not applicable yet (needs creation code)
+- For web access: Wait 1-2 minutes after deployment
 - Check the [Releases page](https://github.com/RiveCo/curlingTimerX/releases)
-- Use `latest` in the URL to always get the newest version
+- Clear browser cache and try again
 
 **Download starts but won't install?**
-- Ensure your Rabbit R1 supports `.rabbit` packages
-- Check if sideloading is enabled on your device
-- Try reinstalling by clearing cache and rescanning
+- Native installation requires an official Rabbit creation code
+- The .rabbit package format is correct, but Rabbit's platform requires approval
+- **Current solution:** Use web access method instead
+- See [RABBIT_DEVELOPER_GUIDE.md](RABBIT_DEVELOPER_GUIDE.md) for developer portal information
 
 ### Web Access Issues
 

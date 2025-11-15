@@ -3,20 +3,23 @@
 Generate a QR code for the Curling Timer X app.
 
 This script creates a QR code that can be scanned on a Rabbit R1 device
-to download and install the app.
+to access or install the app.
 
-By default, generates a QR code for the latest release package.
-Use --web-only flag to generate a QR code for web access instead.
+IMPORTANT: Native app installation requires an official Rabbit "creation code"
+from Rabbit's developer portal. Regular download URL QR codes will show
+"Not a valid creation code" error on Rabbit R1 devices.
+
+For immediate access, use --web-only flag to generate a web access QR code.
 
 Requirements:
     pip install qrcode[pil]
 
 Usage:
-    # Generate QR for installable app package (default)
-    python generate-qr.py
-    
-    # Generate QR for web access only
+    # Generate QR for web access (RECOMMENDED - works now!)
     python generate-qr.py --web-only
+    
+    # Generate QR for installable app package (requires creation code)
+    python generate-qr.py
     
     # Generate QR for specific version
     python generate-qr.py --version 1.0.0
@@ -45,11 +48,20 @@ GITHUB_PAGES_URL = "https://riveco.github.io/curlingTimerX/"
 def generate_qr_code(url, output_file, is_web=False):
     """Generate a QR code for the given URL."""
     print(f"Generating QR code for: {url}")
+    print()
     
     if is_web:
-        print("Mode: Web access (opens in browser)")
+        print("✅ Mode: Web access (opens in browser)")
+        print("   This QR code will work immediately on Rabbit R1!")
     else:
-        print("Mode: App installation (downloads .rabbit package)")
+        print("⚠️  Mode: App installation (downloads .rabbit package)")
+        print("   WARNING: This requires an official Rabbit 'creation code'")
+        print("   Regular download URLs show 'Not a valid creation code' error")
+        print()
+        print("   For immediate access, use: python generate-qr.py --web-only")
+        print("   For details, see: RABBIT_DEVELOPER_GUIDE.md")
+    
+    print()
     
     qr = qrcode.QRCode(
         version=1,
@@ -65,17 +77,37 @@ def generate_qr_code(url, output_file, is_web=False):
     img.save(output_file)
     
     print(f"✓ QR code saved to: {output_file}")
+    print()
     
     if is_web:
-        print(f"\n📱 Scan this QR code with your Rabbit R1 to open the app in browser!")
+        print("📱 READY TO USE!")
+        print("   Scan this QR code with your Rabbit R1 to open the app in browser!")
+        print("   Full functionality available immediately.")
     else:
-        print(f"\n📦 Scan this QR code with your Rabbit R1 to download and install the app!")
-        print(f"   The .rabbit package will be downloaded and installed automatically.")
+        print("⚠️  NOT READY FOR R1 INSTALLATION")
+        print("   This QR code points to a download URL, not a creation code.")
+        print("   It will show 'Not a valid creation code' error on Rabbit R1.")
+        print()
+        print("   To use the app now:")
+        print("   1. Run: python generate-qr.py --web-only")
+        print("   2. Scan the web QR code instead")
+        print()
+        print("   To get native installation working:")
+        print("   - Register app in Rabbit's developer portal")
+        print("   - Get official creation code after approval")
+        print("   - See RABBIT_DEVELOPER_GUIDE.md for details")
 
 def main():
     parser = argparse.ArgumentParser(
         description="Generate a QR code for the Curling Timer X app",
-        epilog="By default, generates QR for app installation. Use --web-only for web access."
+        epilog="""
+IMPORTANT: Native installation requires an official Rabbit creation code.
+For immediate access, use --web-only flag.
+
+Examples:
+  python generate-qr.py --web-only          # Recommended - works now!
+  python generate-qr.py --version 1.0.0     # Download URL (needs creation code)
+        """
     )
     parser.add_argument(
         "--url",
@@ -89,7 +121,7 @@ def main():
     parser.add_argument(
         "--web-only",
         action="store_true",
-        help="Generate QR for web access instead of app installation"
+        help="Generate QR for web access (RECOMMENDED - works immediately!)"
     )
     parser.add_argument(
         "--output",
@@ -98,6 +130,31 @@ def main():
     )
     
     args = parser.parse_args()
+    
+    # Show creation code warning if not using web-only
+    if not args.web_only and not args.url:
+        print()
+        print("=" * 70)
+        print("⚠️  CREATION CODE REQUIREMENT")
+        print("=" * 70)
+        print("Native app installation on Rabbit R1 requires an official")
+        print("'creation code' from Rabbit's developer portal.")
+        print()
+        print("Regular download URL QR codes will show:")
+        print('  "Not a valid creation code" error')
+        print()
+        print("For immediate access, use web mode instead:")
+        print("  python generate-qr.py --web-only")
+        print()
+        print("For details, see: RABBIT_DEVELOPER_GUIDE.md")
+        print("=" * 70)
+        print()
+        
+        response = input("Continue generating download URL QR? (y/N): ").strip().lower()
+        if response not in ['y', 'yes']:
+            print("\nCancelled. Use --web-only flag for immediate access.")
+            return
+        print()
     
     # Determine URL
     if args.url:
