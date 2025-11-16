@@ -243,14 +243,14 @@ export const Timer = {
         const elapsed = this.elapsedTime;
         
         // Calculate rock position
-        // The rink visual is 100px tall with:
+        // The rink visual is 70px tall (updated for Option 1 layout)
         // - backline at top (0px)
-        // - hogline at bottom (100px)
+        // - hogline at bottom (70px)
         
-        const rinkHeight = 100; // px
-        const rockSize = 24; // approximate emoji size
-        const beyondBacklinePos = -12; // Position beyond backline (above rink)
-        const beyondHoglinePos = 100 + 12; // Position beyond hogline (below rink)
+        const rinkHeight = 70; // px - updated for vertical stack layout
+        const rockSize = 20; // approximate emoji size (reduced)
+        const beyondBacklinePos = -10; // Position beyond backline (above rink)
+        const beyondHoglinePos = 70 + 10; // Position beyond hogline (below rink)
         
         let rockTopPosition;
         
@@ -264,7 +264,7 @@ export const Timer = {
             // Time is in valid range - interpolate position between backline and hogline
             // At defaultTime * 0.7: rock should be at backline (0px)
             // At defaultTime: rock should be at optimal position (closer to hogline)
-            // At defaultTime * 1.5: rock should be at hogline (100px)
+            // At defaultTime * 1.5: rock should be at hogline (70px)
             
             const minTime = defaultTime * 0.7;
             const maxTime = defaultTime * 1.5;
