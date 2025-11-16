@@ -85,6 +85,52 @@ export const Timer = {
                 this.stopTimer();
             }
         });
+
+        // Rabbit R1 device side button support
+        // longPressStart event is triggered when the side button is pressed
+        window.addEventListener('longPressStart', () => {
+            this.startTimer();
+        });
+        
+        // longPressEnd event is triggered when the side button is released
+        window.addEventListener('longPressEnd', () => {
+            if (this.isRunning) {
+                this.stopTimer();
+            }
+        });
+
+        // Keyboard fallback for development (Space bar = device button)
+        this.setupKeyboardFallback();
+    },
+
+    /**
+     * Setup keyboard fallback for development
+     * Space bar simulates the Rabbit R1 side button
+     */
+    setupKeyboardFallback() {
+        let spacePressed = false;
+        
+        window.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && !event.repeat) {
+                event.preventDefault();
+                if (!spacePressed) {
+                    spacePressed = true;
+                    this.startTimer();
+                }
+            }
+        });
+        
+        window.addEventListener('keyup', (event) => {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                if (spacePressed) {
+                    spacePressed = false;
+                    if (this.isRunning) {
+                        this.stopTimer();
+                    }
+                }
+            }
+        });
     },
 
     /**
