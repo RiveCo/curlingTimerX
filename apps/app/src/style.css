@@ -43,7 +43,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 8px 12px;
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -51,24 +51,30 @@ html, body {
 }
 
 .app-title {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.5px;
 }
 
 .settings-button,
 .back-button {
-    width: 44px;
-    height: 44px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.1);
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     color: #ffffff;
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+.settings-button svg,
+.back-button svg {
+    width: 18px;
+    height: 18px;
 }
 
 .settings-button:active,
@@ -78,8 +84,8 @@ html, body {
 }
 
 .header-spacer {
-    width: 44px;
-    height: 44px;
+    width: 32px;
+    height: 32px;
 }
 
 /* ===== Main Content ===== */
@@ -87,27 +93,26 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 20px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 8px 12px;
+    overflow: hidden;
 }
 
 /* ===== Mode Selection ===== */
 .mode-selection {
-    margin-bottom: 30px;
+    margin-bottom: 8px;
 }
 
 .section-title {
-    font-size: 16px;
+    font-size: 12px;
     font-weight: 500;
-    margin-bottom: 16px;
+    margin-bottom: 6px;
     opacity: 0.9;
     text-align: center;
 }
 
 .mode-buttons {
     display: flex;
-    gap: 12px;
+    gap: 6px;
     justify-content: center;
 }
 
@@ -117,13 +122,13 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 80px;
-    padding: 12px;
+    min-height: 50px;
+    padding: 6px 4px;
     background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
     color: #ffffff;
-    font-size: 16px;
+    font-size: 11px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -142,13 +147,13 @@ html, body {
 }
 
 .mode-name {
-    font-size: 16px;
+    font-size: 11px;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .mode-time {
-    font-size: 14px;
+    font-size: 10px;
     opacity: 0.8;
 }
 
@@ -159,25 +164,26 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 20px 0;
+    margin: 4px 0;
+    min-height: 0;
 }
 
 .timer-display {
-    font-size: 72px;
+    font-size: 36px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .feedback-display {
     display: none;
-    font-size: 32px;
+    font-size: 18px;
     font-weight: 700;
-    padding: 16px 32px;
-    border-radius: 16px;
+    padding: 6px 16px;
+    border-radius: 8px;
     text-align: center;
     animation: feedbackAppear 0.3s ease;
 }
@@ -216,20 +222,20 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 20px;
+    padding-bottom: 8px;
 }
 
 .start-button {
-    width: 200px;
-    height: 200px;
+    width: 80px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border: 4px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     color: #ffffff;
-    font-size: 24px;
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -250,11 +256,11 @@ html, body {
 }
 
 .instruction-text {
-    margin-top: 20px;
-    font-size: 14px;
+    margin-top: 6px;
+    font-size: 9px;
     text-align: center;
     opacity: 0.8;
-    line-height: 1.6;
+    line-height: 1.3;
 }
 
 /* ===== Settings Screen ===== */
