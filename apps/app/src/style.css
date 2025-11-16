@@ -168,6 +168,56 @@ html, body {
     min-height: 0;
 }
 
+/* ===== Rock Visualization ===== */
+.rock-visualization {
+    width: 100%;
+    max-width: 180px;
+    margin-bottom: 8px;
+}
+
+.rink {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to bottom, 
+        rgba(200, 220, 255, 0.15) 0%,
+        rgba(220, 235, 255, 0.2) 50%,
+        rgba(200, 220, 255, 0.15) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.backline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 68, 68, 0.8);
+    box-shadow: 0 0 4px rgba(255, 68, 68, 0.6);
+}
+
+.hogline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(34, 197, 94, 0.8);
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.6);
+}
+
+.rock {
+    position: absolute;
+    font-size: 24px;
+    transition: top 0.1s linear;
+    left: 50%;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    z-index: 10;
+}
+
 .timer-display {
     font-size: 36px;
     font-weight: 700;
