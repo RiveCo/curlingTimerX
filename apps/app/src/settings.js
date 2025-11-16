@@ -308,6 +308,9 @@ export const Settings = {
         
         // Save settings before closing
         this.saveSettings();
+        
+        // Dispatch event to notify timer to update mode button times
+        window.dispatchEvent(new CustomEvent('settingsUpdated'));
     }
 };
 

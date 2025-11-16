@@ -44,8 +44,36 @@ export const Timer = {
         // Set initial mode
         this.setMode('button');
         
+        // Update mode button times from storage
+        this.updateModeButtonTimes();
+        
         // Update display
         this.updateDisplay();
+    },
+
+    /**
+     * Update mode button times to show actual default values from storage
+     */
+    updateModeButtonTimes() {
+        const settings = Storage.getAllSettings();
+        
+        // Update Button mode time
+        const buttonTimeSpan = this.modeButtons.button.querySelector('.mode-time');
+        if (buttonTimeSpan) {
+            buttonTimeSpan.textContent = `${(settings.buttonTime / 1000).toFixed(2)}s`;
+        }
+        
+        // Update Guard mode time
+        const guardTimeSpan = this.modeButtons.guard.querySelector('.mode-time');
+        if (guardTimeSpan) {
+            guardTimeSpan.textContent = `${(settings.guardTime / 1000).toFixed(2)}s`;
+        }
+        
+        // Update Takeout mode time
+        const takeoutTimeSpan = this.modeButtons.takeout.querySelector('.mode-time');
+        if (takeoutTimeSpan) {
+            takeoutTimeSpan.textContent = `${(settings.takeoutTime / 1000).toFixed(2)}s`;
+        }
     },
 
     /**
@@ -99,6 +127,11 @@ export const Timer = {
             if (this.isRunning) {
                 this.stopTimer();
             }
+        });
+
+        // Listen for settings updates to refresh mode button times
+        window.addEventListener('settingsUpdated', () => {
+            this.updateModeButtonTimes();
         });
 
         // Keyboard fallback for development (Space bar = device button)
@@ -243,14 +276,14 @@ export const Timer = {
         const elapsed = this.elapsedTime;
         
         // Calculate rock position
-        // The rink visual is 70px tall (updated for Option 1 layout)
+        // The rink visual is 180px tall (updated for new layout)
         // - backline at top (0px)
-        // - hogline at bottom (70px)
+        // - hogline at bottom (180px)
         
-        const rinkHeight = 70; // px - updated for vertical stack layout
-        const rockSize = 20; // approximate emoji size (reduced)
+        const rinkHeight = 180; // px - updated for new layout
+        const rockSize = 24; // approximate emoji size
         const beyondBacklinePos = -10; // Position beyond backline (above rink)
-        const beyondHoglinePos = 70 + 10; // Position beyond hogline (below rink)
+        const beyondHoglinePos = 180 + 10; // Position beyond hogline (below rink)
         
         let rockTopPosition;
         
@@ -264,7 +297,7 @@ export const Timer = {
             // Time is in valid range - interpolate position between backline and hogline
             // At defaultTime * 0.7: rock should be at backline (0px)
             // At defaultTime: rock should be at optimal position (closer to hogline)
-            // At defaultTime * 1.5: rock should be at hogline (70px)
+            // At defaultTime * 1.5: rock should be at hogline (180px)
             
             const minTime = defaultTime * 0.7;
             const maxTime = defaultTime * 1.5;
