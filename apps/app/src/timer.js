@@ -3,7 +3,9 @@
  * Handles timer functionality, mode switching, and feedback calculation
  */
 
-const Timer = {
+import { Storage } from './storage.js';
+
+export const Timer = {
     // Timer state
     isRunning: false,
     startTime: null,

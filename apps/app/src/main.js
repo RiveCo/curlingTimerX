@@ -6,10 +6,13 @@
 // Import styles
 import './style.css';
 
-// Import modules
-import './storage.js';
-import './timer.js';
-import './settings.js';
+// Import modules in proper order
+import { Storage } from './storage.js';
+import { Timer } from './timer.js';
+import { Settings } from './settings.js';
+
+// Initialize storage first
+Storage.init();
 
 // Application is initialized by the modules themselves via DOMContentLoaded
 console.log('Curling Timer X initialized');

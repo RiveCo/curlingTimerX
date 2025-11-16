@@ -3,7 +3,9 @@
  * Handles settings screen functionality with scroll wheel interfaces
  */
 
-const Settings = {
+import { Storage } from './storage.js';
+
+export const Settings = {
     // Settings state
     isOpen: false,
     

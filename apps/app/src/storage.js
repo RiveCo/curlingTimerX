@@ -3,7 +3,7 @@
  * Handles localStorage operations for timer settings
  */
 
-const Storage = {
+export const Storage = {
     // Default values in milliseconds
     DEFAULTS: {
         buttonTime: 3650,
