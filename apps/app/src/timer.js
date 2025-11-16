@@ -21,13 +21,6 @@ export const Timer = {
     feedbackDisplay: null,
     rockIcon: null,
     modeButtons: {},
-    timeAdjuster: null,
-    timeAdjusterWheel: null,
-    
-    // Time adjuster state
-    timeAdjusterVisible: false,
-    currentTimeOptions: [],
-    currentTimeIndex: 0,
 
     /**
      * Initialize the timer module
@@ -38,8 +31,6 @@ export const Timer = {
         this.startButton = document.getElementById('start-button');
         this.feedbackDisplay = document.getElementById('feedback-display');
         this.rockIcon = document.getElementById('rock-icon');
-        this.timeAdjuster = document.getElementById('time-adjuster');
-        this.timeAdjusterWheel = document.getElementById('time-adjuster-wheel');
         
         this.modeButtons = {
             button: document.getElementById('mode-button'),
@@ -143,13 +134,69 @@ export const Timer = {
             this.updateModeButtonTimes();
         });
 
-        // Keyboard fallback for development (Space bar = device button)
+        // R1 physical scroll wheel support for time adjustment
+        window.addEventListener('scrollUp', () => {
+            if (!this.isRunning) {
+                this.adjustCurrentModeTime(50); // Increase by 50ms
+            }
+        });
+
+        window.addEventListener('scrollDown', () => {
+            if (!this.isRunning) {
+                this.adjustCurrentModeTime(-50); // Decrease by 50ms
+            }
+        });
+
+        // Keyboard fallback for development (Space bar = device button, Arrow keys = scroll wheel)
         this.setupKeyboardFallback();
+    },
+
+    /**
+     * Adjust the current mode's time using scroll wheel
+     * @param {number} delta - Change in milliseconds (positive or negative)
+     */
+    adjustCurrentModeTime(delta) {
+        const settings = Storage.getAllSettings();
+        let currentTime;
+        
+        switch (this.currentMode) {
+            case 'button':
+                currentTime = settings.buttonTime;
+                break;
+            case 'guard':
+                currentTime = settings.guardTime;
+                break;
+            case 'takeout':
+                currentTime = settings.takeoutTime;
+                break;
+            default:
+                return;
+        }
+        
+        // Calculate new time (constrain between 1.0s and 10.0s)
+        const newTime = Math.max(1000, Math.min(10000, currentTime + delta));
+        
+        // Save the new time
+        switch (this.currentMode) {
+            case 'button':
+                Storage.saveButtonTime(newTime);
+                break;
+            case 'guard':
+                Storage.saveGuardTime(newTime);
+                break;
+            case 'takeout':
+                Storage.saveTakeoutTime(newTime);
+                break;
+        }
+        
+        // Update the mode button display
+        this.updateModeButtonTimes();
     },
 
     /**
      * Setup keyboard fallback for development
      * Space bar simulates the Rabbit R1 side button
+     * Arrow Up/Down simulate the scroll wheel
      */
     setupKeyboardFallback() {
         let spacePressed = false;
@@ -161,6 +208,19 @@ export const Timer = {
                     spacePressed = true;
                     this.startTimer();
                 }
+            }
+            
+            // Arrow keys simulate scroll wheel
+            if (event.code === 'ArrowUp' && !event.repeat) {
+                event.preventDefault();
+                const scrollUpEvent = new CustomEvent('scrollUp');
+                window.dispatchEvent(scrollUpEvent);
+            }
+            
+            if (event.code === 'ArrowDown' && !event.repeat) {
+                event.preventDefault();
+                const scrollDownEvent = new CustomEvent('scrollDown');
+                window.dispatchEvent(scrollDownEvent);
             }
         });
         
@@ -199,224 +259,6 @@ export const Timer = {
         
         // Clear feedback when mode changes
         this.clearFeedback();
-        
-        // Show time adjuster for selected mode
-        this.showTimeAdjuster();
-    },
-
-    /**
-     * Show the time adjuster wheel for the current mode
-     */
-    showTimeAdjuster() {
-        if (!this.timeAdjuster || !this.timeAdjusterWheel) return;
-        
-        // Show the time adjuster
-        this.timeAdjuster.style.display = 'block';
-        this.timeAdjusterVisible = true;
-        
-        // Get current mode's time
-        const currentTime = this.getCurrentModeDefaultTime();
-        
-        // Create time options (1.0s to 10.0s in 0.05s increments)
-        this.currentTimeOptions = [];
-        for (let time = 1000; time <= 10000; time += 50) {
-            this.currentTimeOptions.push(time);
-        }
-        
-        // Find current index
-        this.currentTimeIndex = this.currentTimeOptions.indexOf(currentTime);
-        if (this.currentTimeIndex === -1) {
-            this.currentTimeIndex = Math.round(this.currentTimeOptions.length / 2);
-        }
-        
-        // Build the wheel
-        this.buildTimeAdjusterWheel();
-    },
-
-    /**
-     * Hide the time adjuster wheel
-     */
-    hideTimeAdjuster() {
-        if (!this.timeAdjuster) return;
-        
-        this.timeAdjuster.style.display = 'none';
-        this.timeAdjusterVisible = false;
-    },
-
-    /**
-     * Build the time adjuster wheel interface
-     */
-    buildTimeAdjusterWheel() {
-        if (!this.timeAdjusterWheel) return;
-        
-        // Clear existing content
-        this.timeAdjusterWheel.innerHTML = '';
-        
-        // Create wheel structure
-        const wheelWrapper = document.createElement('div');
-        wheelWrapper.className = 'wheel-wrapper';
-        
-        const wheelList = document.createElement('div');
-        wheelList.className = 'wheel-list';
-        
-        // Create wheel items
-        this.currentTimeOptions.forEach(time => {
-            const item = document.createElement('div');
-            item.className = 'wheel-item';
-            item.dataset.value = time;
-            item.textContent = `${(time / 1000).toFixed(2)}s`;
-            wheelList.appendChild(item);
-        });
-        
-        wheelWrapper.appendChild(wheelList);
-        this.timeAdjusterWheel.appendChild(wheelWrapper);
-        
-        // Set initial position
-        this.scrollTimeAdjusterToIndex(this.currentTimeIndex, false);
-        
-        // Add touch/scroll event listeners
-        this.addTimeAdjusterEventListeners(wheelList);
-    },
-
-    /**
-     * Add event listeners to time adjuster wheel
-     * @param {HTMLElement} wheelList - The wheel list element
-     */
-    addTimeAdjusterEventListeners(wheelList) {
-        let startY = 0;
-        let currentY = 0;
-        let isDragging = false;
-        
-        const itemHeight = 30; // Height of each item in pixels
-        
-        const handleStart = (e) => {
-            isDragging = true;
-            startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            currentY = startY;
-            wheelList.style.transition = 'none';
-        };
-        
-        const handleMove = (e) => {
-            if (!isDragging) return;
-            
-            e.preventDefault();
-            currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-            const deltaY = currentY - startY;
-            
-            // Calculate new index based on drag distance
-            const indexChange = Math.round(-deltaY / itemHeight);
-            let newIndex = this.currentTimeIndex + indexChange;
-            
-            // Clamp index
-            newIndex = Math.max(0, Math.min(this.currentTimeOptions.length - 1, newIndex));
-            
-            // Update transform
-            const offset = -newIndex * itemHeight + (this.timeAdjusterWheel.offsetHeight / 2) - (itemHeight / 2);
-            wheelList.style.transform = `translateY(${offset}px)`;
-            
-            // Update active item
-            this.updateTimeAdjusterActiveItem(wheelList, newIndex);
-        };
-        
-        const handleEnd = () => {
-            if (!isDragging) return;
-            
-            isDragging = false;
-            wheelList.style.transition = 'transform 0.3s ease';
-            
-            const deltaY = currentY - startY;
-            const indexChange = Math.round(-deltaY / itemHeight);
-            let newIndex = this.currentTimeIndex + indexChange;
-            
-            // Clamp index
-            newIndex = Math.max(0, Math.min(this.currentTimeOptions.length - 1, newIndex));
-            
-            // Update current index
-            this.currentTimeIndex = newIndex;
-            
-            // Snap to position
-            this.scrollTimeAdjusterToIndex(newIndex, true);
-            
-            // Save new time value
-            const newTime = this.currentTimeOptions[newIndex];
-            this.saveCurrentModeTime(newTime);
-            
-            // Update mode button display
-            this.updateModeButtonTimes();
-            
-            // Reset start position
-            startY = 0;
-        };
-        
-        // Touch events
-        wheelList.addEventListener('touchstart', handleStart, { passive: false });
-        wheelList.addEventListener('touchmove', handleMove, { passive: false });
-        wheelList.addEventListener('touchend', handleEnd);
-        
-        // Mouse events
-        wheelList.addEventListener('mousedown', handleStart);
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('mouseup', handleEnd);
-    },
-
-    /**
-     * Scroll time adjuster wheel to specific index
-     * @param {number} index - Index to scroll to
-     * @param {boolean} animate - Whether to animate
-     */
-    scrollTimeAdjusterToIndex(index, animate) {
-        if (!this.timeAdjusterWheel) return;
-        
-        const wheelList = this.timeAdjusterWheel.querySelector('.wheel-list');
-        if (!wheelList) return;
-        
-        const itemHeight = 30;
-        const offset = -index * itemHeight + (this.timeAdjusterWheel.offsetHeight / 2) - (itemHeight / 2);
-        
-        if (animate) {
-            wheelList.style.transition = 'transform 0.3s ease';
-        } else {
-            wheelList.style.transition = 'none';
-        }
-        
-        wheelList.style.transform = `translateY(${offset}px)`;
-        
-        // Update active item
-        this.updateTimeAdjusterActiveItem(wheelList, index);
-    },
-
-    /**
-     * Update active item styling in time adjuster
-     * @param {HTMLElement} wheelList - The wheel list element
-     * @param {number} activeIndex - Index of active item
-     */
-    updateTimeAdjusterActiveItem(wheelList, activeIndex) {
-        const items = wheelList.querySelectorAll('.wheel-item');
-        items.forEach((item, index) => {
-            if (index === activeIndex) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-    },
-
-    /**
-     * Save the current mode's time
-     * @param {number} time - Time in milliseconds
-     */
-    saveCurrentModeTime(time) {
-        switch (this.currentMode) {
-            case 'button':
-                Storage.saveButtonTime(time);
-                break;
-            case 'guard':
-                Storage.saveGuardTime(time);
-                break;
-            case 'takeout':
-                Storage.saveTakeoutTime(time);
-                break;
-        }
     },
 
     /**
@@ -433,9 +275,6 @@ export const Timer = {
         
         // Clear previous feedback
         this.clearFeedback();
-        
-        // Hide time adjuster while timer is running
-        this.hideTimeAdjuster();
         
         // Add active state to button
         this.startButton.classList.add('active');
@@ -506,14 +345,13 @@ export const Timer = {
         const elapsed = this.elapsedTime;
         
         // Calculate rock position
-        // The rink visual is 180px tall (updated for new layout)
+        // The rink visual is 240px tall (hogline to backline section)
         // - backline at top (0px)
-        // - hogline at bottom (180px)
+        // - hogline at bottom (240px)
         
-        const rinkHeight = 180; // px - updated for new layout
-        const rockSize = 24; // approximate emoji size
+        const rinkHeight = 240; // px - updated for accurate proportions
         const beyondBacklinePos = -10; // Position beyond backline (above rink)
-        const beyondHoglinePos = 180 + 10; // Position beyond hogline (below rink)
+        const beyondHoglinePos = 240 + 10; // Position beyond hogline (below rink)
         
         let rockTopPosition;
         
@@ -527,7 +365,7 @@ export const Timer = {
             // Time is in valid range - interpolate position between backline and hogline
             // At defaultTime * 0.7: rock should be at backline (0px)
             // At defaultTime: rock should be at optimal position (closer to hogline)
-            // At defaultTime * 1.5: rock should be at hogline (180px)
+            // At defaultTime * 1.5: rock should be at hogline (240px)
             
             const minTime = defaultTime * 0.7;
             const maxTime = defaultTime * 1.5;
@@ -615,11 +453,6 @@ export const Timer = {
         this.elapsedTime = 0;
         this.updateDisplay();
         this.updateRockPosition();
-        
-        // Show time adjuster again after clearing feedback
-        if (!this.isRunning) {
-            this.showTimeAdjuster();
-        }
     }
 };
 
