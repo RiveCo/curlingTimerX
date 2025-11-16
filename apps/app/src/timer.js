@@ -335,8 +335,13 @@ export const Timer = {
      * Rock visualization logic:
      * - Rock shows where the stone will land if released now (without sweeping)
      * - When time is LOW (fast): rock is beyond the backline (top, static position)
-     * - When time is in VALID range: rock moves from backline toward hogline
+     * - When time is in VALID range: rock position depends on shot type
      * - When time is HIGH (slow/light): rock is beyond hogline (bottom, static position)
+     * 
+     * Shot-specific positioning at perfect timing:
+     * - Takeout: Rock near backline (powerful throw to clear house)
+     * - Button: Rock at house center (accurate placement)
+     * - Guard: Rock between house and hogline (protective position)
      */
     updateRockPosition() {
         if (!this.rockIcon) return;
@@ -345,13 +350,15 @@ export const Timer = {
         const elapsed = this.elapsedTime;
         
         // Calculate rock position
-        // The rink visual is 240px tall (hogline to backline section)
+        // The rink visual is 180px tall (backline to hogline section)
         // - backline at top (0px)
-        // - hogline at bottom (240px)
+        // - house center at ~63px (35% from backline)
+        // - hogline at bottom (180px)
         
-        const rinkHeight = 240; // px - updated for accurate proportions
+        const rinkHeight = 180; // px - reduced from 240px for better screen fit
         const beyondBacklinePos = -10; // Position beyond backline (above rink)
-        const beyondHoglinePos = 240 + 10; // Position beyond hogline (below rink)
+        const beyondHoglinePos = 180 + 10; // Position beyond hogline (below rink)
+        const houseCenter = rinkHeight * 0.35; // ~63px - house center position
         
         let rockTopPosition;
         
@@ -362,18 +369,44 @@ export const Timer = {
             // Time is very high - rock would be beyond the hogline (too light/slow)
             rockTopPosition = beyondHoglinePos;
         } else {
-            // Time is in valid range - interpolate position between backline and hogline
-            // At defaultTime * 0.7: rock should be at backline (0px)
-            // At defaultTime: rock should be at optimal position (closer to hogline)
-            // At defaultTime * 1.5: rock should be at hogline (240px)
-            
+            // Time is in valid range - calculate position based on mode and timing
             const minTime = defaultTime * 0.7;
             const maxTime = defaultTime * 1.5;
             const timeRange = maxTime - minTime;
             const timeProgress = (elapsed - minTime) / timeRange;
             
-            // Map time progress to position (0 = backline/top, 1 = hogline/bottom)
-            rockTopPosition = timeProgress * rinkHeight;
+            // Define target positions for perfect timing (at defaultTime) for each mode
+            // timeProgress at defaultTime = (defaultTime - 0.7*defaultTime) / (0.8*defaultTime) = 0.375
+            let targetPosition;
+            
+            if (this.currentMode === 'takeout') {
+                // Takeout: Powerful throw - rock at or near backline (past the circles)
+                // A takeout should be positioned very close to the backline
+                targetPosition = rinkHeight * 0.05; // ~9px - at/near backline
+            } else if (this.currentMode === 'button') {
+                // Button: Accurate placement - rock stops at house center (35% of rink)
+                targetPosition = houseCenter; // ~63px
+            } else if (this.currentMode === 'guard') {
+                // Guard: Protective position - rock stops between house and hogline (55% of rink)
+                // This puts it in the guard zone, closer to hogline than house
+                targetPosition = rinkHeight * 0.55; // ~99px
+            } else {
+                targetPosition = houseCenter; // fallback
+            }
+            
+            // Interpolate from backline (0px) to beyond hogline (rinkHeight)
+            // At perfect timing (timeProgress = 0.375), we want the rock at targetPosition
+            // We need to scale the entire range so that 0.375 maps to our target
+            
+            // Simple linear interpolation weighted to hit target at perfect timing
+            if (timeProgress <= 0.375) {
+                // Before perfect timing: interpolate from backline (0) to target
+                rockTopPosition = (timeProgress / 0.375) * targetPosition;
+            } else {
+                // After perfect timing: interpolate from target to hogline
+                const remainingProgress = (timeProgress - 0.375) / (1 - 0.375);
+                rockTopPosition = targetPosition + remainingProgress * (rinkHeight - targetPosition);
+            }
             
             // Clamp to rink bounds
             rockTopPosition = Math.max(0, Math.min(rinkHeight, rockTopPosition));
