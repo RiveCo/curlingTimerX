@@ -97,33 +97,29 @@ html, body {
     overflow: hidden;
 }
 
-/* ===== Mode Selection ===== */
-.mode-selection {
-    margin-bottom: 8px;
-}
-
-.section-title {
-    font-size: 12px;
-    font-weight: 500;
-    margin-bottom: 6px;
-    opacity: 0.9;
-    text-align: center;
-}
-
-.mode-buttons {
+/* ===== Top Section: Rock Visualization & Mode Selection ===== */
+.top-section {
     display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: stretch;
+}
+
+/* ===== Mode Selection - Vertical Stack ===== */
+.mode-selection {
+    display: flex;
+    flex-direction: column;
     gap: 6px;
-    justify-content: center;
+    flex: 0 0 85px;
 }
 
 .mode-button {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 50px;
-    padding: 6px 4px;
+    min-height: 55px;
+    padding: 6px 8px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
@@ -157,28 +153,20 @@ html, body {
     opacity: 0.8;
 }
 
-/* ===== Timer Section ===== */
-.timer-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    margin: 4px 0 0 0;
-    min-height: 0;
-}
-
 /* ===== Rock Visualization ===== */
 .rock-visualization {
-    width: 100%;
-    max-width: 160px;
-    margin-bottom: 6px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
 }
 
 .rink {
     position: relative;
     width: 100%;
-    height: 70px;
+    max-width: 200px;
+    height: 240px;
     background: linear-gradient(to bottom, 
         rgba(200, 220, 255, 0.15) 0%,
         rgba(220, 235, 255, 0.2) 50%,
@@ -193,9 +181,10 @@ html, body {
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: 3px;
     background: rgba(255, 68, 68, 0.8);
     box-shadow: 0 0 4px rgba(255, 68, 68, 0.6);
+    z-index: 5;
 }
 
 .hogline {
@@ -203,14 +192,67 @@ html, body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: 3px;
     background: rgba(34, 197, 94, 0.8);
     box-shadow: 0 0 4px rgba(34, 197, 94, 0.6);
+    z-index: 5;
+}
+
+/* House (target circles) - Positioned accurately between hogline and backline */
+.house {
+    position: absolute;
+    /* House center is approximately 35% from backline (8 feet from 12-foot button to 12-foot house) */
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.house-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 12-foot ring (outer) - Blue */
+.outer-circle {
+    width: 96px;
+    height: 96px;
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* 8-foot ring - White */
+.middle-circle {
+    width: 64px;
+    height: 64px;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* 4-foot ring - Red */
+.inner-circle {
+    width: 32px;
+    height: 32px;
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+/* Button (center point) */
+.button-circle {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
 .rock {
     position: absolute;
-    font-size: 20px;
+    font-size: 22px;
     transition: top 0.1s linear;
     left: 50%;
     transform: translateX(-50%);
@@ -218,13 +260,31 @@ html, body {
     z-index: 10;
 }
 
+/* ===== Middle Section: Feedback ===== */
+.middle-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    margin-bottom: 4px;
+}
+
+/* ===== Bottom Section: Timer & Button ===== */
+.bottom-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+}
+
 .timer-display {
+    flex: 1;
     font-size: 32px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -1px;
-    text-align: center;
-    margin-bottom: 4px;
+    text-align: left;
     text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -236,7 +296,6 @@ html, body {
     border-radius: 8px;
     text-align: center;
     animation: feedbackAppear 0.3s ease;
-    margin-bottom: 4px;
 }
 
 @keyframes feedbackAppear {
@@ -268,15 +327,9 @@ html, body {
     box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
 }
 
-/* ===== Control Section ===== */
-.control-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 6px;
-}
-
+/* ===== Control Button ===== */
 .start-button {
+    flex: 0 0 70px;
     width: 70px;
     height: 70px;
     display: flex;
@@ -303,7 +356,7 @@ html, body {
 
 .button-text {
     text-align: center;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .instruction-text {

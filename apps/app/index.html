@@ -37,17 +37,32 @@ r="3"
         </header>
 
         <main class="main-content">
-            <!-- Mode Selection -->
-            <section class="mode-selection">
-                <h2 class="section-title">Select Mode</h2>
-                <div class="mode-buttons">
+            <!-- Top Section: Rock Visualization & Mode Selection -->
+            <section class="top-section">
+                <!-- Rock Visualization -->
+                <div id="rock-visualization" class="rock-visualization">
+                    <div class="rink">
+                        <div class="backline"></div>
+                        <div class="house">
+                            <div class="house-circle outer-circle"></div>
+                            <div class="house-circle middle-circle"></div>
+                            <div class="house-circle inner-circle"></div>
+                            <div class="house-circle button-circle"></div>
+                        </div>
+                        <div class="rock" id="rock-icon">🥌</div>
+                        <div class="hogline"></div>
+                    </div>
+                </div>
+                
+                <!-- Mode Selection - Vertical Stack -->
+                <div class="mode-selection">
                     <button
-id="mode-button"
+id="mode-takeout"
 class="mode-button"
-data-mode="button"
+data-mode="takeout"
 >
-                        <span class="mode-name">Button</span>
-                        <span class="mode-time">3.65s</span>
+                        <span class="mode-name">Takeout</span>
+                        <span class="mode-time">3.00s</span>
                     </button>
                     <button
 id="mode-guard"
@@ -58,35 +73,27 @@ data-mode="guard"
                         <span class="mode-time">3.90s</span>
                     </button>
                     <button
-id="mode-takeout"
+id="mode-button"
 class="mode-button"
-data-mode="takeout"
+data-mode="button"
 >
-                        <span class="mode-name">Takeout</span>
-                        <span class="mode-time">3.00s</span>
+                        <span class="mode-name">Button</span>
+                        <span class="mode-time">3.65s</span>
                     </button>
                 </div>
             </section>
 
-            <!-- Timer Display -->
-            <section class="timer-section">
-                <div id="rock-visualization" class="rock-visualization">
-                    <div class="rink">
-                        <div class="backline"></div>
-                        <div class="rock" id="rock-icon">🥌</div>
-                        <div class="hogline"></div>
-                    </div>
-                </div>
-                <div id="timer-display" class="timer-display">0.000s</div>
+            <!-- Middle Section: Feedback Display -->
+            <section class="middle-section">
                 <div id="feedback-display" class="feedback-display"></div>
             </section>
 
-            <!-- Start/Stop Button -->
-            <section class="control-section">
+            <!-- Bottom Section: Timer & Control Button -->
+            <section class="bottom-section">
+                <div id="timer-display" class="timer-display">0.000s</div>
                 <button id="start-button" class="start-button">
-                    <span class="button-text">Press & Hold</span>
+                    <span class="button-text">Press &<br>Hold</span>
                 </button>
-                <p class="instruction-text">Press and hold to start timer<br>Release to stop</p>
             </section>
         </main>
     </div>

@@ -44,8 +44,36 @@ export const Timer = {
         // Set initial mode
         this.setMode('button');
         
+        // Update mode button times from storage
+        this.updateModeButtonTimes();
+        
         // Update display
         this.updateDisplay();
+    },
+
+    /**
+     * Update mode button times to show actual default values from storage
+     */
+    updateModeButtonTimes() {
+        const settings = Storage.getAllSettings();
+        
+        // Update Button mode time
+        const buttonTimeSpan = this.modeButtons.button.querySelector('.mode-time');
+        if (buttonTimeSpan) {
+            buttonTimeSpan.textContent = `${(settings.buttonTime / 1000).toFixed(2)}s`;
+        }
+        
+        // Update Guard mode time
+        const guardTimeSpan = this.modeButtons.guard.querySelector('.mode-time');
+        if (guardTimeSpan) {
+            guardTimeSpan.textContent = `${(settings.guardTime / 1000).toFixed(2)}s`;
+        }
+        
+        // Update Takeout mode time
+        const takeoutTimeSpan = this.modeButtons.takeout.querySelector('.mode-time');
+        if (takeoutTimeSpan) {
+            takeoutTimeSpan.textContent = `${(settings.takeoutTime / 1000).toFixed(2)}s`;
+        }
     },
 
     /**
@@ -101,13 +129,74 @@ export const Timer = {
             }
         });
 
-        // Keyboard fallback for development (Space bar = device button)
+        // Listen for settings updates to refresh mode button times
+        window.addEventListener('settingsUpdated', () => {
+            this.updateModeButtonTimes();
+        });
+
+        // R1 physical scroll wheel support for time adjustment
+        window.addEventListener('scrollUp', () => {
+            if (!this.isRunning) {
+                this.adjustCurrentModeTime(50); // Increase by 50ms
+            }
+        });
+
+        window.addEventListener('scrollDown', () => {
+            if (!this.isRunning) {
+                this.adjustCurrentModeTime(-50); // Decrease by 50ms
+            }
+        });
+
+        // Keyboard fallback for development (Space bar = device button, Arrow keys = scroll wheel)
         this.setupKeyboardFallback();
+    },
+
+    /**
+     * Adjust the current mode's time using scroll wheel
+     * @param {number} delta - Change in milliseconds (positive or negative)
+     */
+    adjustCurrentModeTime(delta) {
+        const settings = Storage.getAllSettings();
+        let currentTime;
+        
+        switch (this.currentMode) {
+            case 'button':
+                currentTime = settings.buttonTime;
+                break;
+            case 'guard':
+                currentTime = settings.guardTime;
+                break;
+            case 'takeout':
+                currentTime = settings.takeoutTime;
+                break;
+            default:
+                return;
+        }
+        
+        // Calculate new time (constrain between 1.0s and 10.0s)
+        const newTime = Math.max(1000, Math.min(10000, currentTime + delta));
+        
+        // Save the new time
+        switch (this.currentMode) {
+            case 'button':
+                Storage.saveButtonTime(newTime);
+                break;
+            case 'guard':
+                Storage.saveGuardTime(newTime);
+                break;
+            case 'takeout':
+                Storage.saveTakeoutTime(newTime);
+                break;
+        }
+        
+        // Update the mode button display
+        this.updateModeButtonTimes();
     },
 
     /**
      * Setup keyboard fallback for development
      * Space bar simulates the Rabbit R1 side button
+     * Arrow Up/Down simulate the scroll wheel
      */
     setupKeyboardFallback() {
         let spacePressed = false;
@@ -119,6 +208,19 @@ export const Timer = {
                     spacePressed = true;
                     this.startTimer();
                 }
+            }
+            
+            // Arrow keys simulate scroll wheel
+            if (event.code === 'ArrowUp' && !event.repeat) {
+                event.preventDefault();
+                const scrollUpEvent = new CustomEvent('scrollUp');
+                window.dispatchEvent(scrollUpEvent);
+            }
+            
+            if (event.code === 'ArrowDown' && !event.repeat) {
+                event.preventDefault();
+                const scrollDownEvent = new CustomEvent('scrollDown');
+                window.dispatchEvent(scrollDownEvent);
             }
         });
         
@@ -243,14 +345,13 @@ export const Timer = {
         const elapsed = this.elapsedTime;
         
         // Calculate rock position
-        // The rink visual is 70px tall (updated for Option 1 layout)
+        // The rink visual is 240px tall (hogline to backline section)
         // - backline at top (0px)
-        // - hogline at bottom (70px)
+        // - hogline at bottom (240px)
         
-        const rinkHeight = 70; // px - updated for vertical stack layout
-        const rockSize = 20; // approximate emoji size (reduced)
+        const rinkHeight = 240; // px - updated for accurate proportions
         const beyondBacklinePos = -10; // Position beyond backline (above rink)
-        const beyondHoglinePos = 70 + 10; // Position beyond hogline (below rink)
+        const beyondHoglinePos = 240 + 10; // Position beyond hogline (below rink)
         
         let rockTopPosition;
         
@@ -264,7 +365,7 @@ export const Timer = {
             // Time is in valid range - interpolate position between backline and hogline
             // At defaultTime * 0.7: rock should be at backline (0px)
             // At defaultTime: rock should be at optimal position (closer to hogline)
-            // At defaultTime * 1.5: rock should be at hogline (70px)
+            // At defaultTime * 1.5: rock should be at hogline (240px)
             
             const minTime = defaultTime * 0.7;
             const maxTime = defaultTime * 1.5;
