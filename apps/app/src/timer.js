@@ -19,6 +19,7 @@ export const Timer = {
     timerDisplay: null,
     startButton: null,
     feedbackDisplay: null,
+    rockIcon: null,
     modeButtons: {},
 
     /**
@@ -29,6 +30,7 @@ export const Timer = {
         this.timerDisplay = document.getElementById('timer-display');
         this.startButton = document.getElementById('start-button');
         this.feedbackDisplay = document.getElementById('feedback-display');
+        this.rockIcon = document.getElementById('rock-icon');
         
         this.modeButtons = {
             button: document.getElementById('mode-button'),
@@ -212,6 +214,7 @@ export const Timer = {
         
         this.elapsedTime = performance.now() - this.startTime;
         this.updateDisplay();
+        this.updateRockPosition();
         
         // Continue animation loop
         this.animationFrameId = requestAnimationFrame(() => this.updateTimer());
@@ -223,6 +226,60 @@ export const Timer = {
     updateDisplay() {
         const timeInSeconds = (this.elapsedTime / 1000).toFixed(3);
         this.timerDisplay.textContent = `${timeInSeconds}s`;
+    },
+
+    /**
+     * Update the rock position based on elapsed time
+     * Rock visualization logic:
+     * - Rock shows where the stone will land if released now (without sweeping)
+     * - When time is LOW (fast): rock is beyond the backline (top, static position)
+     * - When time is in VALID range: rock moves from backline toward hogline
+     * - When time is HIGH (slow/light): rock is beyond hogline (bottom, static position)
+     */
+    updateRockPosition() {
+        if (!this.rockIcon) return;
+        
+        const defaultTime = this.getCurrentModeDefaultTime();
+        const elapsed = this.elapsedTime;
+        
+        // Calculate rock position
+        // The rink visual is 70px tall (updated for Option 1 layout)
+        // - backline at top (0px)
+        // - hogline at bottom (70px)
+        
+        const rinkHeight = 70; // px - updated for vertical stack layout
+        const rockSize = 20; // approximate emoji size (reduced)
+        const beyondBacklinePos = -10; // Position beyond backline (above rink)
+        const beyondHoglinePos = 70 + 10; // Position beyond hogline (below rink)
+        
+        let rockTopPosition;
+        
+        if (elapsed < defaultTime * 0.7) {
+            // Time is very low - rock would be beyond the backline (too fast)
+            rockTopPosition = beyondBacklinePos;
+        } else if (elapsed > defaultTime * 1.5) {
+            // Time is very high - rock would be beyond the hogline (too light/slow)
+            rockTopPosition = beyondHoglinePos;
+        } else {
+            // Time is in valid range - interpolate position between backline and hogline
+            // At defaultTime * 0.7: rock should be at backline (0px)
+            // At defaultTime: rock should be at optimal position (closer to hogline)
+            // At defaultTime * 1.5: rock should be at hogline (70px)
+            
+            const minTime = defaultTime * 0.7;
+            const maxTime = defaultTime * 1.5;
+            const timeRange = maxTime - minTime;
+            const timeProgress = (elapsed - minTime) / timeRange;
+            
+            // Map time progress to position (0 = backline/top, 1 = hogline/bottom)
+            rockTopPosition = timeProgress * rinkHeight;
+            
+            // Clamp to rink bounds
+            rockTopPosition = Math.max(0, Math.min(rinkHeight, rockTopPosition));
+        }
+        
+        // Apply position
+        this.rockIcon.style.top = `${rockTopPosition}px`;
     },
 
     /**
@@ -294,6 +351,7 @@ export const Timer = {
         this.feedbackDisplay.style.display = 'none';
         this.elapsedTime = 0;
         this.updateDisplay();
+        this.updateRockPosition();
     }
 };
 
