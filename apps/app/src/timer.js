@@ -380,9 +380,9 @@ export const Timer = {
             let targetPosition;
             
             if (this.currentMode === 'takeout') {
-                // Takeout: Powerful throw - rock stops near/past house (30-40% of rink)
-                // Maps 0.375 progress to ~30% of rink height
-                targetPosition = rinkHeight * 0.30; // ~54px
+                // Takeout: Powerful throw - rock at or near backline (past the circles)
+                // A takeout should be positioned very close to the backline
+                targetPosition = rinkHeight * 0.05; // ~9px - at/near backline
             } else if (this.currentMode === 'button') {
                 // Button: Accurate placement - rock stops at house center (35% of rink)
                 targetPosition = houseCenter; // ~63px
