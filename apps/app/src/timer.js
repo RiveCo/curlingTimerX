@@ -117,15 +117,12 @@ export const Timer = {
         });
 
         // Rabbit R1 device side button support
-        // longPressStart event is triggered when the side button is pressed
-        window.addEventListener('longPressStart', () => {
-            this.startTimer();
-        });
-        
-        // longPressEnd event is triggered when the side button is released
-        window.addEventListener('longPressEnd', () => {
+        // sideClick event is triggered when the side button is pressed (toggle behavior)
+        window.addEventListener('sideClick', () => {
             if (this.isRunning) {
                 this.stopTimer();
+            } else {
+                this.startTimer();
             }
         });
 
@@ -195,19 +192,16 @@ export const Timer = {
 
     /**
      * Setup keyboard fallback for development
-     * Space bar simulates the Rabbit R1 side button
+     * Space bar simulates the Rabbit R1 side button (toggle behavior)
      * Arrow Up/Down simulate the scroll wheel
      */
     setupKeyboardFallback() {
-        let spacePressed = false;
-        
         window.addEventListener('keydown', (event) => {
             if (event.code === 'Space' && !event.repeat) {
                 event.preventDefault();
-                if (!spacePressed) {
-                    spacePressed = true;
-                    this.startTimer();
-                }
+                // Dispatch sideClick event to simulate the physical button
+                const sideClickEvent = new CustomEvent('sideClick');
+                window.dispatchEvent(sideClickEvent);
             }
             
             // Arrow keys simulate scroll wheel
@@ -221,18 +215,6 @@ export const Timer = {
                 event.preventDefault();
                 const scrollDownEvent = new CustomEvent('scrollDown');
                 window.dispatchEvent(scrollDownEvent);
-            }
-        });
-        
-        window.addEventListener('keyup', (event) => {
-            if (event.code === 'Space') {
-                event.preventDefault();
-                if (spacePressed) {
-                    spacePressed = false;
-                    if (this.isRunning) {
-                        this.stopTimer();
-                    }
-                }
             }
         });
     },
