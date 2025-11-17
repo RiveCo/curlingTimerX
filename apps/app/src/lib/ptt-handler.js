@@ -41,17 +41,45 @@ class PTTHandler {
     this.isLocked = true;
     this.isAppActive = true;
     
-    // Notify the system that PTT is locked
-    // This is typically handled by the manifest.json lockPtt: true setting
-    // but we also set it programmatically for additional safety
+    // Try multiple methods to notify the system that PTT is locked
+    
+    // Method 1: PTTLockHandler (if available)
     if (window.PTTLockHandler) {
       try {
         window.PTTLockHandler.postMessage(JSON.stringify({
           action: 'lock',
           reason: 'app_active'
         }));
+        console.log('PTT locked via PTTLockHandler');
       } catch (error) {
-        console.warn('PTTLockHandler not available:', error);
+        console.warn('PTTLockHandler failed:', error);
+      }
+    }
+    
+    // Method 2: PluginMessageHandler - tell Flutter to disable voice assistant
+    if (window.PluginMessageHandler) {
+      try {
+        window.PluginMessageHandler.postMessage(JSON.stringify({
+          action: 'disableVoiceAssistant',
+          message: 'PTT button locked by Curling Timer X',
+          lockPtt: true
+        }));
+        console.log('PTT lock message sent via PluginMessageHandler');
+      } catch (error) {
+        console.warn('PluginMessageHandler lock failed:', error);
+      }
+    }
+    
+    // Method 3: FlutterButtonHandler (if available)
+    if (window.FlutterButtonHandler) {
+      try {
+        window.FlutterButtonHandler.postMessage(JSON.stringify({
+          action: 'lockPTT',
+          locked: true
+        }));
+        console.log('PTT locked via FlutterButtonHandler');
+      } catch (error) {
+        console.warn('FlutterButtonHandler lock failed:', error);
       }
     }
   }
@@ -63,14 +91,45 @@ class PTTHandler {
     this.isLocked = false;
     this.isAppActive = false;
     
+    // Try multiple methods to notify the system that PTT is unlocked
+    
+    // Method 1: PTTLockHandler (if available)
     if (window.PTTLockHandler) {
       try {
         window.PTTLockHandler.postMessage(JSON.stringify({
           action: 'unlock',
           reason: 'app_inactive'
         }));
+        console.log('PTT unlocked via PTTLockHandler');
       } catch (error) {
-        console.warn('PTTLockHandler not available:', error);
+        console.warn('PTTLockHandler unlock failed:', error);
+      }
+    }
+    
+    // Method 2: PluginMessageHandler - tell Flutter to enable voice assistant
+    if (window.PluginMessageHandler) {
+      try {
+        window.PluginMessageHandler.postMessage(JSON.stringify({
+          action: 'enableVoiceAssistant',
+          message: 'PTT button unlocked by Curling Timer X',
+          lockPtt: false
+        }));
+        console.log('PTT unlock message sent via PluginMessageHandler');
+      } catch (error) {
+        console.warn('PluginMessageHandler unlock failed:', error);
+      }
+    }
+    
+    // Method 3: FlutterButtonHandler (if available)
+    if (window.FlutterButtonHandler) {
+      try {
+        window.FlutterButtonHandler.postMessage(JSON.stringify({
+          action: 'unlockPTT',
+          locked: false
+        }));
+        console.log('PTT unlocked via FlutterButtonHandler');
+      } catch (error) {
+        console.warn('FlutterButtonHandler unlock failed:', error);
       }
     }
   }
@@ -120,7 +179,6 @@ class PTTHandler {
    */
   interceptVoiceAssistant() {
     // Capture longPressStart events and prevent them from triggering voice assistant
-    const originalLongPressStart = window.addEventListener;
     const self = this;
     
     // Override addEventListener to capture longPressStart events first
@@ -129,6 +187,10 @@ class PTTHandler {
     // Add a capturing phase listener for longPressStart
     window.addEventListener('longPressStart', (event) => {
       if (self.isLocked && self.isAppActive) {
+        // Prevent the default action (voice assistant activation)
+        if (event.cancelable) {
+          event.preventDefault();
+        }
         // Stop the event from propagating to voice assistant
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -136,30 +198,88 @@ class PTTHandler {
         // Mark this event as handled by the app
         capturedEvents.add(event);
         
+        // Notify Flutter that we've handled this event
+        self.notifyEventHandled('longPressStart');
+        
         console.log('PTT longPressStart captured - Voice assistant prevented');
+        
+        // Return false as additional prevention measure
+        return false;
       }
     }, true); // Use capturing phase
 
     // Add a capturing phase listener for longPressEnd
     window.addEventListener('longPressEnd', (event) => {
       if (self.isLocked && self.isAppActive) {
+        // Prevent the default action (voice assistant activation)
+        if (event.cancelable) {
+          event.preventDefault();
+        }
         // Stop the event from propagating to voice assistant
         event.stopPropagation();
         event.stopImmediatePropagation();
         
+        // Notify Flutter that we've handled this event
+        self.notifyEventHandled('longPressEnd');
+        
         console.log('PTT longPressEnd captured - Voice assistant prevented');
+        
+        // Return false as additional prevention measure
+        return false;
       }
     }, true); // Use capturing phase
 
     // Also capture sideClick events
     window.addEventListener('sideClick', (event) => {
       if (self.isLocked && self.isAppActive) {
+        // Prevent the default action (voice assistant activation)
+        if (event.cancelable) {
+          event.preventDefault();
+        }
         event.stopPropagation();
         event.stopImmediatePropagation();
         
+        // Notify Flutter that we've handled this event
+        self.notifyEventHandled('sideClick');
+        
         console.log('PTT sideClick captured - Voice assistant prevented');
+        
+        // Return false as additional prevention measure
+        return false;
       }
     }, true); // Use capturing phase
+  }
+
+  /**
+   * Notify Flutter/native layer that we've handled a PTT event
+   * This tells the system not to trigger the voice assistant
+   * @param {string} eventType - Type of event that was handled
+   */
+  notifyEventHandled(eventType) {
+    // Try to notify Flutter that we've consumed this event
+    if (window.PluginMessageHandler) {
+      try {
+        window.PluginMessageHandler.postMessage(JSON.stringify({
+          action: 'pttEventHandled',
+          eventType: eventType,
+          timestamp: Date.now(),
+          message: 'PTT event consumed by app, do not trigger voice assistant'
+        }));
+      } catch (error) {
+        // Silently fail - this is a best-effort notification
+      }
+    }
+    
+    if (window.FlutterButtonHandler) {
+      try {
+        window.FlutterButtonHandler.postMessage(JSON.stringify({
+          action: 'eventHandled',
+          event: eventType
+        }));
+      } catch (error) {
+        // Silently fail - this is a best-effort notification
+      }
+    }
   }
 
   /**
