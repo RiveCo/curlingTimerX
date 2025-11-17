@@ -9,7 +9,8 @@ export const Storage = {
         buttonTime: 3650,
         guardTime: 3900,
         takeoutTime: 3000,
-        threshold: 50
+        threshold: 50,
+        maxRocks: 8
     },
 
     // Storage keys
@@ -17,7 +18,8 @@ export const Storage = {
         buttonTime: 'curling_button_time',
         guardTime: 'curling_guard_time',
         takeoutTime: 'curling_takeout_time',
-        threshold: 'curling_threshold'
+        threshold: 'curling_threshold',
+        maxRocks: 'curling_max_rocks'
     },
 
     /**
@@ -35,6 +37,9 @@ export const Storage = {
         }
         if (localStorage.getItem(this.KEYS.threshold) === null) {
             this.saveThreshold(this.DEFAULTS.threshold);
+        }
+        if (localStorage.getItem(this.KEYS.maxRocks) === null) {
+            this.saveMaxRocks(this.DEFAULTS.maxRocks);
         }
     },
 
@@ -107,6 +112,25 @@ export const Storage = {
     },
 
     /**
+     * Get max rocks value
+     * @returns {number} Maximum number of rocks to display
+     */
+    getMaxRocks() {
+        const value = localStorage.getItem(this.KEYS.maxRocks);
+        return value !== null ? parseInt(value, 10) : this.DEFAULTS.maxRocks;
+    },
+
+    /**
+     * Save max rocks value
+     * @param {number} maxRocks - Maximum number of rocks to display (1-8)
+     */
+    saveMaxRocks(maxRocks) {
+        // Clamp between 1 and 8
+        const clamped = Math.max(1, Math.min(8, maxRocks));
+        localStorage.setItem(this.KEYS.maxRocks, clamped.toString());
+    },
+
+    /**
      * Get all settings
      * @returns {Object} All settings
      */
@@ -115,7 +139,8 @@ export const Storage = {
             buttonTime: this.getButtonTime(),
             guardTime: this.getGuardTime(),
             takeoutTime: this.getTakeoutTime(),
-            threshold: this.getThreshold()
+            threshold: this.getThreshold(),
+            maxRocks: this.getMaxRocks()
         };
     },
 
@@ -127,6 +152,7 @@ export const Storage = {
         this.saveGuardTime(this.DEFAULTS.guardTime);
         this.saveTakeoutTime(this.DEFAULTS.takeoutTime);
         this.saveThreshold(this.DEFAULTS.threshold);
+        this.saveMaxRocks(this.DEFAULTS.maxRocks);
     }
 };
 
