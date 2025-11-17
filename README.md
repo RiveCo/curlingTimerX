@@ -112,7 +112,7 @@ Access the app through the web browser without waiting for developer approval:
 - **Sweeping Recommendations**: Real-time guidance based on stone position and ice speed
 - **Shot History**: Track your last shots with detailed metrics
 - **Settings**: View ice speed history and average times
-- **PTT Voice Assistant Prevention**: Prevents accidental voice assistant activation when using the PTT button for timer control
+- **PTT Voice Assistant Prevention**: Uses multiple strategies to prevent accidental voice assistant activation when using the PTT button for timer control (see [VOICE_ASSISTANT_PREVENTION_GUIDE.md](VOICE_ASSISTANT_PREVENTION_GUIDE.md) for technical details)
 
 ## 🎮 Device Controls
 
@@ -121,7 +121,7 @@ The app integrates with Rabbit R1's native controls:
 - **Scroll Wheel**: Adjust ice speed
 - **Screen Tap**: Record shot and reset
 
-**Note**: The PTT (Push-to-Talk) button is locked when the app is active, preventing the voice assistant from being triggered. This ensures that pressing the button only controls the timer without unwanted voice assistant interactions.
+**Note**: The app implements multiple strategies to prevent the PTT (Push-to-Talk) button from triggering the voice assistant when pressed. This includes event prevention, multi-channel native notifications, and manifest-level configuration. See [VOICE_ASSISTANT_PREVENTION_GUIDE.md](VOICE_ASSISTANT_PREVENTION_GUIDE.md) for complete technical details and testing instructions.
 
 See `apps/app/src/lib/device-controls.md` for detailed API documentation.
 
@@ -362,6 +362,7 @@ cd apps/app && npm run build && cd ../..
 
 ## 📚 Additional Documentation
 
+- **Voice Assistant Prevention**: See [VOICE_ASSISTANT_PREVENTION_GUIDE.md](VOICE_ASSISTANT_PREVENTION_GUIDE.md) - Comprehensive guide to PTT voice assistant prevention strategies
 - **PTT Handler**: See `apps/app/src/lib/ptt-handler.md`
 - **Device Controls**: See `apps/app/src/lib/device-controls.md`
 - **Flutter Channel API**: See `apps/app/src/lib/flutter-channel.md`
