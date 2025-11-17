@@ -262,6 +262,18 @@ html, body {
     z-index: 10;
 }
 
+/* Current rock (active) - highlighted */
+#rock-icon {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+}
+
+/* Trail rocks (thrown) - dimmed */
+.trail-rock {
+    opacity: 0.5;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    z-index: 9;
+}
+
 /* ===== Middle Section: Feedback ===== */
 .middle-section {
     display: flex;

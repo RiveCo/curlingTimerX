@@ -23,7 +23,8 @@ export const Settings = {
         buttonTime: 3650,
         guardTime: 3900,
         takeoutTime: 3000,
-        threshold: 50
+        threshold: 50,
+        maxRocks: 8
     },
     
     // Configuration
@@ -33,6 +34,8 @@ export const Settings = {
     MAX_TIME: 10000, // 10 seconds maximum
     MIN_THRESHOLD: 0,
     MAX_THRESHOLD: 500,
+    MIN_MAX_ROCKS: 1,
+    MAX_MAX_ROCKS: 8,
 
     /**
      * Initialize the settings module
@@ -49,7 +52,8 @@ export const Settings = {
             buttonTime: document.getElementById('button-time-wheel'),
             guardTime: document.getElementById('guard-time-wheel'),
             takeoutTime: document.getElementById('takeout-time-wheel'),
-            threshold: document.getElementById('threshold-wheel')
+            threshold: document.getElementById('threshold-wheel'),
+            maxRocks: document.getElementById('max-rocks-wheel')
         };
         
         // Load current settings
@@ -79,7 +83,8 @@ export const Settings = {
             buttonTime: settings.buttonTime,
             guardTime: settings.guardTime,
             takeoutTime: settings.takeoutTime,
-            threshold: settings.threshold
+            threshold: settings.threshold,
+            maxRocks: settings.maxRocks
         };
     },
 
@@ -91,6 +96,7 @@ export const Settings = {
         this.createScrollWheel('guardTime', this.currentValues.guardTime, this.MIN_TIME, this.MAX_TIME, this.TIME_INCREMENT);
         this.createScrollWheel('takeoutTime', this.currentValues.takeoutTime, this.MIN_TIME, this.MAX_TIME, this.TIME_INCREMENT);
         this.createScrollWheel('threshold', this.currentValues.threshold, this.MIN_THRESHOLD, this.MAX_THRESHOLD, this.THRESHOLD_INCREMENT);
+        this.createScrollWheel('maxRocks', this.currentValues.maxRocks, this.MIN_MAX_ROCKS, this.MAX_MAX_ROCKS, 1);
     },
 
     /**
@@ -130,6 +136,8 @@ export const Settings = {
             // Format display text
             if (name === 'threshold') {
                 item.textContent = `${value}ms`;
+            } else if (name === 'maxRocks') {
+                item.textContent = `${value} rock${value === 1 ? '' : 's'}`;
             } else {
                 item.textContent = `${(value / 1000).toFixed(2)}s`;
             }
@@ -283,6 +291,7 @@ export const Settings = {
         Storage.saveGuardTime(this.currentValues.guardTime);
         Storage.saveTakeoutTime(this.currentValues.takeoutTime);
         Storage.saveThreshold(this.currentValues.threshold);
+        Storage.saveMaxRocks(this.currentValues.maxRocks);
     },
 
     /**

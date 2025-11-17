@@ -15,11 +15,15 @@ export const Timer = {
     // Current mode
     currentMode: 'button', // 'button', 'guard', or 'takeout'
     
+    // Rock trail tracking
+    thrownRocks: [], // Array of {position: number} objects
+    
     // DOM elements (will be set on init)
     timerDisplay: null,
     startButton: null,
     feedbackDisplay: null,
     rockIcon: null,
+    rinkElement: null,
     modeButtons: {},
 
     /**
@@ -31,6 +35,7 @@ export const Timer = {
         this.startButton = document.getElementById('start-button');
         this.feedbackDisplay = document.getElementById('feedback-display');
         this.rockIcon = document.getElementById('rock-icon');
+        this.rinkElement = document.querySelector('.rink');
         
         this.modeButtons = {
             button: document.getElementById('mode-button'),
@@ -49,6 +54,9 @@ export const Timer = {
         
         // Update display
         this.updateDisplay();
+        
+        // Initialize rock trail
+        this.renderRockTrail();
     },
 
     /**
@@ -286,6 +294,9 @@ export const Timer = {
         
         // Calculate and show feedback
         this.showFeedback();
+        
+        // Record the rock position
+        this.recordRockPosition();
     },
 
     /**
@@ -468,6 +479,45 @@ export const Timer = {
         this.elapsedTime = 0;
         this.updateDisplay();
         this.updateRockPosition();
+    },
+
+    /**
+     * Record the current rock position when timer stops
+     */
+    recordRockPosition() {
+        const maxRocks = Storage.getMaxRocks();
+        
+        // Get the current rock position from the DOM
+        const rockTop = parseFloat(this.rockIcon.style.top || '0');
+        
+        // Add the current rock to thrown rocks
+        this.thrownRocks.push({ position: rockTop });
+        
+        // If we exceed maxRocks, reset the trail
+        if (this.thrownRocks.length >= maxRocks) {
+            this.thrownRocks = [];
+        }
+        
+        // Render the updated trail
+        this.renderRockTrail();
+    },
+
+    /**
+     * Render the rock trail on the rink
+     */
+    renderRockTrail() {
+        // Remove existing trail rocks
+        const existingTrailRocks = this.rinkElement.querySelectorAll('.trail-rock');
+        existingTrailRocks.forEach(rock => rock.remove());
+        
+        // Render each thrown rock
+        this.thrownRocks.forEach((rock, index) => {
+            const trailRock = document.createElement('div');
+            trailRock.className = 'rock trail-rock';
+            trailRock.textContent = '🥌';
+            trailRock.style.top = `${rock.position}px`;
+            this.rinkElement.appendChild(trailRock);
+        });
     }
 };
 
