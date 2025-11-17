@@ -22,6 +22,7 @@
   "permissions": [
     "storage"
   ],
+  "lockPtt": true,
   "category": "sports",
   "keywords": [
     "curling",

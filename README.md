@@ -112,13 +112,16 @@ Access the app through the web browser without waiting for developer approval:
 - **Sweeping Recommendations**: Real-time guidance based on stone position and ice speed
 - **Shot History**: Track your last shots with detailed metrics
 - **Settings**: View ice speed history and average times
+- **PTT Voice Assistant Prevention**: Prevents accidental voice assistant activation when using the PTT button for timer control
 
 ## 🎮 Device Controls
 
 The app integrates with Rabbit R1's native controls:
-- **Side Button (Hold)**: Start/stop timer
+- **Side Button (Hold)**: Start/stop timer (voice assistant disabled while app is active)
 - **Scroll Wheel**: Adjust ice speed
 - **Screen Tap**: Record shot and reset
+
+**Note**: The PTT (Push-to-Talk) button is locked when the app is active, preventing the voice assistant from being triggered. This ensures that pressing the button only controls the timer without unwanted voice assistant interactions.
 
 See `apps/app/src/lib/device-controls.md` for detailed API documentation.
 
@@ -359,6 +362,7 @@ cd apps/app && npm run build && cd ../..
 
 ## 📚 Additional Documentation
 
+- **PTT Handler**: See `apps/app/src/lib/ptt-handler.md`
 - **Device Controls**: See `apps/app/src/lib/device-controls.md`
 - **Flutter Channel API**: See `apps/app/src/lib/flutter-channel.md`
 - **UI Design Guide**: See `apps/app/src/lib/ui-design.md`
