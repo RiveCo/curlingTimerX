@@ -23,6 +23,9 @@
     "storage"
   ],
   "lockPtt": true,
+  "disableVoiceAssistant": true,
+  "pttBehavior": "appOnly",
+  "voiceAssistantEnabled": false,
   "category": "sports",
   "keywords": [
     "curling",
