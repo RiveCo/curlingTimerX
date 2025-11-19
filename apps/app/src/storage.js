@@ -4,12 +4,12 @@
  */
 
 export const Storage = {
-    // Default values in milliseconds
+    // Default values in milliseconds (back-to-hog timing)
     DEFAULTS: {
-        buttonTime: 3650,
-        guardTime: 3900,
-        takeoutTime: 3000,
-        threshold: 50,
+        buttonTime: 3000,  // 3.0s - typical draw weight (back to hog)
+        guardTime: 3300,   // 3.3s - guard weight (lighter/slower) 
+        takeoutTime: 2700, // 2.7s - takeout weight (faster)
+        threshold: 100,    // 0.1s tolerance
         maxRocks: 8
     },
 

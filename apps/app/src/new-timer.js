@@ -83,12 +83,12 @@ export const NewTimer = {
     },
 
     /**
-     * Create initial throw preview showing 3.6s throw to button
+     * Create initial throw preview showing 3.0s throw to button
      */
     createInitialThrowPreview() {
-        // Create a throw record for 3.6 seconds (typical draw weight to button)
-        const hogToBackTime = 3.6; // seconds
-        const velocity = Physics.calculateVelocity(hogToBackTime);
+        // Create a throw record for 3.0 seconds (typical draw weight to button)
+        const backToHogTime = 3.0; // seconds
+        const velocity = Physics.calculateVelocity(backToHogTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
         const zone = Physics.classifyZone(predictedDistance);
@@ -96,7 +96,7 @@ export const NewTimer = {
         const willScore = Physics.willScore(predictedDistance);
         
         this.currentThrow = {
-            time: hogToBackTime,
+            time: backToHogTime,
             velocity: velocity,
             predictedDistance: predictedDistance,
             sweptDistance: sweptDistance,
@@ -107,7 +107,7 @@ export const NewTimer = {
         };
         
         // Set elapsed time to match the preview
-        this.elapsedTime = hogToBackTime * 1000; // Convert to milliseconds
+        this.elapsedTime = backToHogTime * 1000; // Convert to milliseconds
     },
 
     /**
@@ -412,16 +412,16 @@ export const NewTimer = {
         this.startButton.classList.remove('active');
         
         // Create throw record only if we have a valid time
-        const hogToBackTime = this.elapsedTime / 1000; // Convert to seconds
+        const backToHogTime = this.elapsedTime / 1000; // Convert to seconds
         
         // Validate minimum time (lowered to 1.0 second for fast takeout shots)
-        if (hogToBackTime < 1.0) {
+        if (backToHogTime < 1.0) {
             console.log('Timer stopped too quickly - throw ignored (min 1.0s)');
             this.updateDisplay();
             return;
         }
         
-        const velocity = Physics.calculateVelocity(hogToBackTime);
+        const velocity = Physics.calculateVelocity(backToHogTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
         const zone = Physics.classifyZone(predictedDistance);
@@ -429,7 +429,7 @@ export const NewTimer = {
         const willScore = Physics.willScore(predictedDistance);
         
         this.currentThrow = {
-            time: hogToBackTime,
+            time: backToHogTime,
             velocity: velocity,
             predictedDistance: predictedDistance,
             sweptDistance: sweptDistance,
@@ -631,21 +631,21 @@ export const NewTimer = {
         ctx.arc(centerX, teeY, 2, 0, 2 * Math.PI);
         ctx.fill();
         
-        // Draw BACK LINE (top) - Timing END point - THICKER and MORE VISIBLE
-        ctx.strokeStyle = 'rgba(255, 68, 68, 1.0)';
-        ctx.lineWidth = 5;
+        // Draw FAR BACK LINE (top) - Reference line for rink visualization
+        ctx.strokeStyle = 'rgba(255, 68, 68, 0.5)';
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(0, 2.5);
         ctx.lineTo(width, 2.5);
         ctx.stroke();
         
-        // Add BACK LINE label
-        ctx.fillStyle = 'rgba(255, 68, 68, 1.0)';
-        ctx.font = 'bold 9px sans-serif';
+        // Add FAR BACK LINE label
+        ctx.fillStyle = 'rgba(255, 68, 68, 0.7)';
+        ctx.font = 'bold 7px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('BACK', 4, 12);
+        ctx.fillText('BACK', 4, 10);
         
-        // Draw HOG LINE (bottom) - Timing START point - THICKER and MORE VISIBLE
+        // Draw NEAR HOG LINE (bottom) - Timing END point (rock crosses here)
         ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.lineWidth = 5;
         ctx.beginPath();
@@ -653,28 +653,28 @@ export const NewTimer = {
         ctx.lineTo(width, height - 2.5);
         ctx.stroke();
         
-        // Add HOG LINE label
+        // Add NEAR HOG LINE label
         ctx.fillStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.font = 'bold 9px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText('HOG', 4, height - 5);
         
-        // Add timing direction arrow/indicator
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Add timing direction arrow/indicator (pointing down - from back to hog)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(10, height - 15);
-        ctx.lineTo(10, 20);
+        ctx.moveTo(width - 10, 20);
+        ctx.lineTo(width - 10, height - 15);
         ctx.stroke();
         ctx.setLineDash([]);
         
-        // Arrow head pointing up (timing direction)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        // Arrow head pointing down (timing direction - back to hog)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.beginPath();
-        ctx.moveTo(10, 20);
-        ctx.lineTo(7, 26);
-        ctx.lineTo(13, 26);
+        ctx.moveTo(width - 10, height - 15);
+        ctx.lineTo(width - 13, height - 21);
+        ctx.lineTo(width - 7, height - 21);
         ctx.closePath();
         ctx.fill();
         
