@@ -83,12 +83,12 @@ export const NewTimer = {
     },
 
     /**
-     * Create initial throw preview showing 3.6s throw to button
+     * Create initial throw preview showing 3.0s throw to button
      */
     createInitialThrowPreview() {
-        // Create a throw record for 3.6 seconds (typical draw weight to button)
-        const hogToBackTime = 3.6; // seconds
-        const velocity = Physics.calculateVelocity(hogToBackTime);
+        // Create a throw record for 3.0 seconds (typical draw weight to button)
+        const backToHogTime = 3.0; // seconds
+        const velocity = Physics.calculateVelocity(backToHogTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
         const zone = Physics.classifyZone(predictedDistance);
@@ -96,7 +96,7 @@ export const NewTimer = {
         const willScore = Physics.willScore(predictedDistance);
         
         this.currentThrow = {
-            time: hogToBackTime,
+            time: backToHogTime,
             velocity: velocity,
             predictedDistance: predictedDistance,
             sweptDistance: sweptDistance,
@@ -107,7 +107,7 @@ export const NewTimer = {
         };
         
         // Set elapsed time to match the preview
-        this.elapsedTime = hogToBackTime * 1000; // Convert to milliseconds
+        this.elapsedTime = backToHogTime * 1000; // Convert to milliseconds
     },
 
     /**
@@ -412,16 +412,16 @@ export const NewTimer = {
         this.startButton.classList.remove('active');
         
         // Create throw record only if we have a valid time
-        const hogToBackTime = this.elapsedTime / 1000; // Convert to seconds
+        const backToHogTime = this.elapsedTime / 1000; // Convert to seconds
         
         // Validate minimum time (lowered to 1.0 second for fast takeout shots)
-        if (hogToBackTime < 1.0) {
+        if (backToHogTime < 1.0) {
             console.log('Timer stopped too quickly - throw ignored (min 1.0s)');
             this.updateDisplay();
             return;
         }
         
-        const velocity = Physics.calculateVelocity(hogToBackTime);
+        const velocity = Physics.calculateVelocity(backToHogTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
         const zone = Physics.classifyZone(predictedDistance);
@@ -429,7 +429,7 @@ export const NewTimer = {
         const willScore = Physics.willScore(predictedDistance);
         
         this.currentThrow = {
-            time: hogToBackTime,
+            time: backToHogTime,
             velocity: velocity,
             predictedDistance: predictedDistance,
             sweptDistance: sweptDistance,
@@ -580,101 +580,121 @@ export const NewTimer = {
         // Clear canvas
         ctx.clearRect(0, 0, width, height);
         
+        // Canvas visualization: Shows the FAR END (target end) of the rink
+        // From bottom to top:
+        // - Small buffer (10ft)
+        // - FAR HOG LINE (the hog line on far end that rock crosses)
+        // - HOUSE (scoring zone, centered at 66ft from near hog)
+        // - FAR BACK LINE (end line, at 126ft from near hog)
+        // - Small buffer (10ft)
+        
+        // The canvas shows from 40ft to 140ft from the near hog line
+        // This gives us the far hog (at ~54-78ft visible range) + house + back line
+        const viewportStart = 40; // Start viewing from 40ft (before far hog crosses)
+        const viewportEnd = 140; // End at 140ft (past back line)
+        const viewportRange = viewportEnd - viewportStart; // 100ft visible range
+        const scale = height / viewportRange; // pixels per foot
+        
+        // Helper function to convert distance from near hog to canvas Y position
+        const distanceToY = (distFromNearHog) => {
+            return height - (distFromNearHog - viewportStart) * scale;
+        };
+        
+        // Draw buffer zones (semi-transparent gray)
+        // Buffer below far hog (40-54ft range)
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.1)';
+        ctx.fillRect(0, distanceToY(54), width, (54 - viewportStart) * scale);
+        
+        // Buffer above back line (126-140ft range)
+        ctx.fillRect(0, 0, width, distanceToY(126));
+        
         // Draw zones with shading
-        const hoglineToBackline = Physics.DIMENSIONS.hoglineToBackline;
-        const scale = height / hoglineToBackline; // pixels per foot
-        
-        // Guard zone (bottom - near hog line)
+        // Guard zone (54-66ft from near hog - between far hog and house)
         ctx.fillStyle = 'rgba(100, 150, 255, 0.2)';
-        const guardStart = 0;
-        const guardEnd = Physics.DIMENSIONS.guardZoneEnd;
-        ctx.fillRect(0, height - guardEnd * scale, width, (guardEnd - guardStart) * scale);
+        ctx.fillRect(0, distanceToY(66), width, 12 * scale);
         
-        // Draw zone (middle - house)
-        ctx.fillStyle = 'rgba(255, 200, 100, 0.2)';
-        const drawStart = Physics.DIMENSIONS.drawZoneStart;
-        const drawEnd = Physics.DIMENSIONS.drawZoneEnd;
-        ctx.fillRect(0, height - drawEnd * scale, width, (drawEnd - drawStart) * scale);
+        // House zone (66-78ft from near hog)
+        ctx.fillStyle = 'rgba(255, 200, 100, 0.25)';
+        ctx.fillRect(0, distanceToY(78), width, 12 * scale);
         
-        // Takeout zone (top - beyond house)
+        // Takeout zone (78-126ft from near hog - between house and back line)
         ctx.fillStyle = 'rgba(255, 100, 100, 0.2)';
-        const takeoutStart = Physics.DIMENSIONS.takeoutZoneStart;
-        const takeoutEnd = Physics.DIMENSIONS.takeoutZoneEnd;
-        ctx.fillRect(0, height - takeoutEnd * scale, width, (takeoutEnd - takeoutStart) * scale);
+        ctx.fillRect(0, distanceToY(126), width, 48 * scale);
         
-        // Draw house circles
-        const teeY = height - Physics.DIMENSIONS.hoglineToTee * scale;
+        // Draw house circles (centered at tee line, 66ft from near hog)
+        const teeY = distanceToY(Physics.DIMENSIONS.hoglineToTee);
         const centerX = width / 2;
         
         // 12-foot (outer) - Blue
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(centerX, teeY, 12 * scale, 0, 2 * Math.PI);
         ctx.stroke();
         
         // 8-foot - White
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.beginPath();
         ctx.arc(centerX, teeY, 8 * scale, 0, 2 * Math.PI);
         ctx.stroke();
         
         // 4-foot - Red
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
         ctx.beginPath();
         ctx.arc(centerX, teeY, 4 * scale, 0, 2 * Math.PI);
         ctx.stroke();
         
         // Button (center)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.beginPath();
         ctx.arc(centerX, teeY, 2, 0, 2 * Math.PI);
         ctx.fill();
         
-        // Draw BACK LINE (top) - Timing END point - THICKER and MORE VISIBLE
-        ctx.strokeStyle = 'rgba(255, 68, 68, 1.0)';
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(0, 2.5);
-        ctx.lineTo(width, 2.5);
-        ctx.stroke();
-        
-        // Add BACK LINE label
-        ctx.fillStyle = 'rgba(255, 68, 68, 1.0)';
-        ctx.font = 'bold 9px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('BACK', 4, 12);
-        
-        // Draw HOG LINE (bottom) - Timing START point - THICKER and MORE VISIBLE
+        // Draw FAR HOG LINE (at 54ft from near hog - this is the hog line on the far end)
+        const farHogY = distanceToY(54);
         ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.moveTo(0, height - 2.5);
-        ctx.lineTo(width, height - 2.5);
+        ctx.moveTo(0, farHogY);
+        ctx.lineTo(width, farHogY);
         ctx.stroke();
         
-        // Add HOG LINE label
+        // Add FAR HOG LINE label
         ctx.fillStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.font = 'bold 9px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('HOG', 4, height - 5);
+        ctx.fillText('HOG LINE', 4, farHogY - 5);
         
-        // Add timing direction arrow/indicator
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Draw FAR BACK LINE (end line at 126ft from near hog)
+        const farBackY = distanceToY(126);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 1.0)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, farBackY);
+        ctx.lineTo(width, farBackY);
+        ctx.stroke();
+        
+        // Add FAR BACK LINE label
+        ctx.fillStyle = 'rgba(239, 68, 68, 1.0)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillText('BACK LINE', 4, farBackY + 11);
+        
+        // Add directional indicator showing rock travels upward
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(10, height - 15);
-        ctx.lineTo(10, 20);
+        ctx.moveTo(width - 10, height - 15);
+        ctx.lineTo(width - 10, 15);
         ctx.stroke();
         ctx.setLineDash([]);
         
-        // Arrow head pointing up (timing direction)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        // Arrow head pointing up (rock direction)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.beginPath();
-        ctx.moveTo(10, 20);
-        ctx.lineTo(7, 26);
-        ctx.lineTo(13, 26);
+        ctx.moveTo(width - 10, 15);
+        ctx.lineTo(width - 13, 21);
+        ctx.lineTo(width - 7, 21);
         ctx.closePath();
         ctx.fill();
         
@@ -684,36 +704,41 @@ export const NewTimer = {
             const displayDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
             const sweptDistance = Physics.predictSweptDistance(displayDistance, 'normal');
             
-            const predictedY = height - displayDistance * scale;
-            const sweptY = height - sweptDistance * scale;
+            // Calculate Y positions using distanceToY function
+            const predictedY = distanceToY(displayDistance);
+            const sweptY = distanceToY(sweptDistance);
             
-            // Clamp positions to canvas bounds
-            const clampedPredictedY = Math.max(10, Math.min(height - 10, predictedY));
-            const clampedSweptY = Math.max(10, Math.min(height - 10, sweptY));
+            // Only show rocks that are within the viewport (40-140ft range)
+            if (displayDistance >= viewportStart && displayDistance <= viewportEnd) {
+                // Draw horizontal line for predicted position (without sweeping) - YELLOW/GOLD
+                ctx.strokeStyle = this.isAdjustingRock ? 'rgba(255, 100, 100, 1.0)' : 'rgba(255, 215, 0, 1.0)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, predictedY);
+                ctx.lineTo(width, predictedY);
+                ctx.stroke();
+                
+                // Draw small rock icon at predicted position
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = this.isAdjustingRock ? 'rgba(255, 100, 100, 0.8)' : 'rgba(255, 215, 0, 0.8)';
+                ctx.fillText('🥌', centerX, predictedY + 4);
+                ctx.shadowBlur = 0;
+            }
             
-            // Draw horizontal line for predicted position (without sweeping) - YELLOW/GOLD
-            ctx.strokeStyle = this.isAdjustingRock ? 'rgba(255, 100, 100, 1.0)' : 'rgba(255, 215, 0, 1.0)';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, clampedPredictedY);
-            ctx.lineTo(width, clampedPredictedY);
-            ctx.stroke();
-            
-            // Draw horizontal line for swept position - GREEN
-            ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, clampedSweptY);
-            ctx.lineTo(width, clampedSweptY);
-            ctx.stroke();
-            
-            // Draw small rock icon at predicted position
-            ctx.font = '8px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = this.isAdjustingRock ? 'rgba(255, 100, 100, 0.8)' : 'rgba(255, 215, 0, 0.8)';
-            ctx.fillText('🥌', centerX, clampedPredictedY + 3);
-            ctx.shadowBlur = 0;
+            // Draw swept position if within viewport
+            if (sweptDistance >= viewportStart && sweptDistance <= viewportEnd) {
+                // Draw horizontal line for swept position - GREEN
+                ctx.strokeStyle = 'rgba(34, 197, 94, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(0, sweptY);
+                ctx.lineTo(width, sweptY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
         }
     },
 

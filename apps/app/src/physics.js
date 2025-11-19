@@ -6,8 +6,10 @@
 export const Physics = {
     // Curling rink dimensions (in feet, per WCF rules)
     DIMENSIONS: {
-        hoglineToBackline: 126, // feet - distance from hog line to back line
-        hoglineToTee: 66, // feet - distance from hog line to center of house (tee line)
+        backlineToHogline: 21, // feet - distance from back line to near hog line (STANDARD DELIVERY TIMING)
+        hoglineToHogline: 146, // feet - distance from near hog line to far hog line
+        hoglineToBackline: 126, // feet - distance from hog line to far back line
+        hoglineToTee: 66, // feet - distance from near hog line to center of house (tee line)
         hoglineToFrontOfHouse: 54, // feet - distance from hog line to front 12-foot circle
         hoglineToBackOfHouse: 78, // feet - distance from hog line to back 12-foot circle
         guardZoneStart: 0, // feet from hog line - guards are before house
@@ -20,7 +22,7 @@ export const Physics = {
 
     // Physics constants
     CONSTANTS: {
-        defaultDeceleration: 9.28, // ft/s² - calibrated so 3.6s lands on button (66 ft), will be further calibrated
+        defaultDeceleration: 0.45, // ft/s² - calibrated for typical curling ice (3s back-to-hog lands on button)
         sweepingEffect: 0.05, // 5% distance increase with normal sweep
         hardSweepEffect: 0.10, // 10% distance increase with hard sweep
         // Sweep recommendation thresholds
@@ -32,7 +34,7 @@ export const Physics = {
 
     // Calibration data
     calibration: {
-        deceleration: 9.28, // Current deceleration constant (ft/s²) - calibrated so 3.6s lands on button
+        deceleration: 0.45, // Current deceleration constant (ft/s²) - calibrated for typical ice
         samples: [], // Array of calibration samples: {time, distance, velocity, deceleration}
         maxSamples: 10, // Keep last 10 calibration throws
     },
@@ -46,38 +48,55 @@ export const Physics = {
     },
 
     /**
-     * Calculate velocity from hog-to-backline time
-     * Using average velocity: v_avg = distance / time
-     * Note: The rock is still moving at the back line, so we use average velocity
-     * rather than assuming it decelerates to zero.
+     * Calculate velocity at hog line from back-to-hog time
      * 
-     * @param {number} time - Time from hog line to back line (seconds)
-     * @returns {number} Average velocity (ft/s)
+     * Timing measures from back line to near hog line (21 feet).
+     * For a curling stone with constant deceleration during delivery:
+     * d = v0*t - 0.5*a*t²
+     * Solving for v0: v0 = (d + 0.5*a*t²) / t
+     * 
+     * @param {number} time - Time from back line to near hog line (seconds)
+     * @param {number} deceleration - Deceleration constant (ft/s²), optional (uses calibrated if not provided)
+     * @returns {number} Velocity at hog line (ft/s)
      */
-    calculateVelocity(time) {
-        const distance = this.DIMENSIONS.hoglineToBackline;
-        // v_avg = distance / time (average velocity for hog-to-back timing)
-        return distance / time;
+    calculateVelocity(time, deceleration = null) {
+        const a = deceleration !== null ? deceleration : this.calibration.deceleration;
+        const distance = this.DIMENSIONS.backlineToHogline;
+        
+        // v0 = (d + 0.5*a*t²) / t
+        return (distance + 0.5 * a * time * time) / time;
     },
 
     /**
-     * Calculate deceleration from velocity and distance
-     * Using: v² = v0² - 2*a*d => a = (v0² - v²) / (2*d)
-     * Assuming final velocity v ≈ 0: a = v0² / (2*d)
+     * Calculate deceleration from back-to-hog time and final distance
      * 
-     * @param {number} velocity - Initial velocity (ft/s)
-     * @param {number} distance - Distance traveled (feet)
+     * From d = v0*t - 0.5*a*t² and v_final² = v0² - 2*a*d
+     * We can solve for both v0 and a
+     * 
+     * @param {number} backToHogTime - Time from back line to near hog (seconds)
+     * @param {number} finalDistance - Final resting distance from near hog line (feet)
      * @returns {number} Deceleration (ft/s²)
      */
-    calculateDeceleration(velocity, distance) {
-        return (velocity * velocity) / (2 * distance);
+    calculateDeceleration(backToHogTime, finalDistance) {
+        const d_timing = this.DIMENSIONS.backlineToHogline; // 21 ft
+        const t = backToHogTime;
+        const d_final = finalDistance;
+        
+        // Use iterative approach to find deceleration
+        let a_guess = 0.45; // Start with typical value
+        for (let i = 0; i < 5; i++) {
+            const v_hog = (d_timing + 0.5 * a_guess * t * t) / t;
+            a_guess = (v_hog * v_hog) / (2 * d_final);
+        }
+        
+        return a_guess;
     },
 
     /**
      * Predict final resting distance from hog line
-     * Using: distance = v² / (2*a) for constant deceleration
+     * Using: d = v0²/(2*a) for constant deceleration until stone stops
      * 
-     * @param {number} velocity - Average velocity (ft/s)
+     * @param {number} velocity - Initial velocity at hog line (ft/s)
      * @param {number} deceleration - Deceleration constant (ft/s²), optional (uses calibrated if not provided)
      * @returns {number} Predicted distance from hog line (feet)
      */
@@ -90,6 +109,7 @@ export const Physics = {
             return NaN;
         }
         
+        // d = v0² / (2*a) - distance until stone stops
         return (velocity * velocity) / (2 * a);
     },
 
@@ -258,31 +278,31 @@ export const Physics = {
     /**
      * Add a calibration sample and update deceleration
      * 
-     * @param {number} hogToBackTime - Time from hog to back line (seconds)
-     * @param {number} actualFinalDistance - Actual final distance from hog line (feet)
+     * @param {number} backToHogTime - Time from back line to near hog line (seconds)
+     * @param {number} actualFinalDistance - Actual final distance from near hog line (feet)
      */
-    addCalibrationSample(hogToBackTime, actualFinalDistance) {
+    addCalibrationSample(backToHogTime, actualFinalDistance) {
         // Validate actualFinalDistance is within reasonable bounds
         if (actualFinalDistance <= 0 || actualFinalDistance > 150) {
             console.warn('Invalid calibration distance:', actualFinalDistance, 'feet. Must be between 0 and 150 feet.');
             return;
         }
         
-        // Calculate velocity at hog line
-        const velocity = this.calculateVelocity(hogToBackTime);
+        // Calculate deceleration from back-to-hog time and actual final position
+        const deceleration = this.calculateDeceleration(backToHogTime, actualFinalDistance);
         
-        // Calculate deceleration from actual final position
-        const deceleration = this.calculateDeceleration(velocity, actualFinalDistance);
-        
-        // Validate deceleration is reasonable
-        if (!isFinite(deceleration) || deceleration <= 0) {
-            console.warn('Invalid calibration deceleration:', deceleration);
+        // Validate deceleration is reasonable (0.2 to 1.0 ft/s² for curling ice)
+        if (!isFinite(deceleration) || deceleration <= 0.2 || deceleration > 1.0) {
+            console.warn('Invalid calibration deceleration:', deceleration, 'ft/s² (expected 0.2-1.0)');
             return;
         }
         
+        // Calculate velocity for reference
+        const velocity = this.calculateVelocity(backToHogTime);
+        
         // Add sample
         const sample = {
-            time: hogToBackTime,
+            time: backToHogTime,
             distance: actualFinalDistance,
             velocity: velocity,
             deceleration: deceleration,
