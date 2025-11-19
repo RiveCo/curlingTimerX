@@ -17,17 +17,6 @@ pttHandler.init();
 // Initialize physics model
 Physics.init();
 
-// Initialize new timer when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        NewTimer.init();
-        updateCalibrationDisplay();
-    });
-} else {
-    NewTimer.init();
-    updateCalibrationDisplay();
-}
-
 /**
  * Update calibration info display
  */
@@ -39,8 +28,25 @@ function updateCalibrationDisplay() {
     }
 }
 
-// Update calibration display periodically
-setInterval(updateCalibrationDisplay, 2000);
+// Initialize new timer when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        NewTimer.init();
+        updateCalibrationDisplay();
+    });
+} else {
+    NewTimer.init();
+    updateCalibrationDisplay();
+}
+
+// Set up callback to update calibration display when calibration is accepted
+// Store original acceptCalibration method
+const originalAcceptCalibration = NewTimer.acceptCalibration;
+NewTimer.acceptCalibration = function(actualDistance) {
+    originalAcceptCalibration.call(this, actualDistance);
+    // Update display after calibration is accepted
+    updateCalibrationDisplay();
+};
 
 console.log('Curling Predictor (Experimental) initialized');
 console.log('Calibration:', Physics.getCalibrationInfo());

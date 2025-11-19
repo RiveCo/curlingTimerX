@@ -20,14 +20,19 @@ export const Physics = {
 
     // Physics constants
     CONSTANTS: {
-        defaultDeceleration: 0.15, // ft/s² - initial guess, will be calibrated
+        defaultDeceleration: 1.8, // ft/s² - initial guess based on realistic curling physics, will be calibrated
         sweepingEffect: 0.05, // 5% distance increase with normal sweep
         hardSweepEffect: 0.10, // 10% distance increase with hard sweep
+        // Sweep recommendation thresholds
+        HARD_SWEEP_THRESHOLD_FT: 10, // Trigger hard sweep if more than 10 ft short
+        SWEEP_THRESHOLD_FT: 3, // Trigger normal sweep if 3-10 ft short
+        OVERSHOOT_THRESHOLD_FT: 5, // Avoid hard sweep if it would overshoot by more than 5 ft
+        GOOD_RANGE_FT: 3, // Consider "good" if within 3 ft of target
     },
 
     // Calibration data
     calibration: {
-        deceleration: 0.15, // Current deceleration constant (ft/s²)
+        deceleration: 1.8, // Current deceleration constant (ft/s²) - realistic default
         samples: [], // Array of calibration samples: {time, distance, velocity, deceleration}
         maxSamples: 10, // Keep last 10 calibration throws
     },
@@ -42,18 +47,17 @@ export const Physics = {
 
     /**
      * Calculate velocity from hog-to-backline time
-     * Using: distance = average_velocity * time
-     * For constant deceleration: v_avg = (v0 + v_final) / 2
-     * Assuming v_final ≈ 0, v_avg ≈ v0 / 2
-     * So: distance = (v0 / 2) * time => v0 = 2 * distance / time
+     * Using average velocity: v_avg = distance / time
+     * Note: The rock is still moving at the back line, so we use average velocity
+     * rather than assuming it decelerates to zero.
      * 
      * @param {number} time - Time from hog line to back line (seconds)
-     * @returns {number} Initial velocity at hog line (ft/s)
+     * @returns {number} Average velocity (ft/s)
      */
     calculateVelocity(time) {
         const distance = this.DIMENSIONS.hoglineToBackline;
-        // v0 = 2 * distance / time (for constant deceleration to ~0)
-        return (2 * distance) / time;
+        // v_avg = distance / time (average velocity for hog-to-back timing)
+        return distance / time;
     },
 
     /**
@@ -71,14 +75,21 @@ export const Physics = {
 
     /**
      * Predict final resting distance from hog line
-     * Using: distance = v0² / (2*a)
+     * Using: distance = v² / (2*a) for constant deceleration
      * 
-     * @param {number} velocity - Initial velocity at hog line (ft/s)
+     * @param {number} velocity - Average velocity (ft/s)
      * @param {number} deceleration - Deceleration constant (ft/s²), optional (uses calibrated if not provided)
      * @returns {number} Predicted distance from hog line (feet)
      */
     predictDistance(velocity, deceleration = null) {
         const a = deceleration !== null ? deceleration : this.calibration.deceleration;
+        
+        // Validate deceleration is positive and non-zero
+        if (typeof a !== 'number' || a <= 0 || !isFinite(a)) {
+            console.warn('Invalid deceleration value:', a);
+            return NaN;
+        }
+        
         return (velocity * velocity) / (2 * a);
     },
 
@@ -146,26 +157,31 @@ export const Physics = {
         const difference = predictedDistance - zoneCenter;
         
         // Calculate what would happen with sweeping
-        const normalSweptDistance = this.predictSweptDistance(predictedDistance, 'normal');
         const hardSweptDistance = this.predictSweptDistance(predictedDistance, 'hard');
         
+        // Use named constants for thresholds
+        const HARD_SWEEP_THRESHOLD = this.CONSTANTS.HARD_SWEEP_THRESHOLD_FT;
+        const SWEEP_THRESHOLD = this.CONSTANTS.SWEEP_THRESHOLD_FT;
+        const OVERSHOOT_THRESHOLD = this.CONSTANTS.OVERSHOOT_THRESHOLD_FT;
+        const GOOD_RANGE = this.CONSTANTS.GOOD_RANGE_FT;
+        
         // If predicted distance is very short of center, recommend hard sweep
-        if (difference < -10) { // More than 10 feet short
+        if (difference < -HARD_SWEEP_THRESHOLD) {
             return 'hard_sweep';
         }
         // If short of center but hard sweep would overshoot significantly, use normal sweep
-        else if (difference < -3) { // 3-10 feet short
-            if (hardSweptDistance > zoneCenter + 5) {
+        else if (difference < -SWEEP_THRESHOLD) {
+            if (hardSweptDistance > zoneCenter + OVERSHOOT_THRESHOLD) {
                 return 'sweep';
             }
             return 'hard_sweep';
         }
         // If slightly short, recommend sweep
-        else if (difference < 0) { // 0-3 feet short
+        else if (difference < 0) {
             return 'sweep';
         }
         // If past center, recommend fast (no sweep)
-        else if (difference > 3) { // More than 3 feet past
+        else if (difference > GOOD_RANGE) {
             return 'fast';
         }
         // Otherwise, it's good
@@ -192,11 +208,23 @@ export const Physics = {
      * @param {number} actualFinalDistance - Actual final distance from hog line (feet)
      */
     addCalibrationSample(hogToBackTime, actualFinalDistance) {
+        // Validate actualFinalDistance is within reasonable bounds
+        if (actualFinalDistance <= 0 || actualFinalDistance > 150) {
+            console.warn('Invalid calibration distance:', actualFinalDistance, 'feet. Must be between 0 and 150 feet.');
+            return;
+        }
+        
         // Calculate velocity at hog line
         const velocity = this.calculateVelocity(hogToBackTime);
         
         // Calculate deceleration from actual final position
         const deceleration = this.calculateDeceleration(velocity, actualFinalDistance);
+        
+        // Validate deceleration is reasonable
+        if (!isFinite(deceleration) || deceleration <= 0) {
+            console.warn('Invalid calibration deceleration:', deceleration);
+            return;
+        }
         
         // Add sample
         const sample = {

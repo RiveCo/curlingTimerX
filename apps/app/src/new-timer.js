@@ -217,12 +217,12 @@ export const NewTimer = {
         // Remove active state from button
         this.startButton.classList.remove('active');
         
-        // Create throw record only if we have a valid time (at least 1 second for realistic throw)
+        // Create throw record only if we have a valid time
         const hogToBackTime = this.elapsedTime / 1000; // Convert to seconds
         
-        // Validate minimum time (at least 1.5 seconds for a realistic curling throw)
-        if (hogToBackTime < 1.5) {
-            console.log('Timer stopped too quickly - throw ignored (min 1.5s)');
+        // Validate minimum time (lowered to 1.0 second for fast takeout shots)
+        if (hogToBackTime < 1.0) {
+            console.log('Timer stopped too quickly - throw ignored (min 1.0s)');
             this.updateDisplay();
             return;
         }
@@ -485,10 +485,9 @@ export const NewTimer = {
             const clampedPredictedY = Math.max(10, Math.min(height - 10, predictedY));
             const clampedSweptY = Math.max(10, Math.min(height - 10, sweptY));
             
-            // Predicted position (without sweeping) - Yellow - ROCK EMOJI
+            // Predicted position (without sweeping) - ROCK EMOJI with glow effect
             ctx.font = '16px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('🥌', centerX, clampedPredictedY + 5);
             
             // Add glow effect to predicted rock
             ctx.shadowBlur = 10;
@@ -554,11 +553,17 @@ export const NewTimer = {
         this.calibrationSliderMoved = true;
         
         // Convert slider value (0-100) to distance adjustment
-        // Center (50) = predicted distance, lower = shorter, higher = longer
+        // Use percentage-based range for better handling of uncalibrated initial predictions
         const predictedDist = this.previousThrow.predictedDistance;
-        const range = 30; // +/- 15 feet from predicted
+        
+        // Use percentage-based range: ±50% of predicted distance, minimum ±30 feet
+        const rangePercent = 0.5; // ±50%
+        const minRange = 60; // Minimum ±30 feet on each side
+        const range = Math.max(minRange, predictedDist * rangePercent * 2); // Total range
+        
+        // Center (50) = predicted distance, 0 = much shorter, 100 = much longer
         const adjustment = (value - 50) * (range / 100);
-        const actualDistance = predictedDist + adjustment;
+        const actualDistance = Math.max(0, predictedDist + adjustment);
         
         this.calibrationValue.textContent = `${actualDistance.toFixed(1)} ft`;
         
@@ -577,9 +582,14 @@ export const NewTimer = {
         if (actualDistance === null) {
             const sliderValue = parseFloat(this.calibrationSlider.value);
             const predictedDist = this.previousThrow.predictedDistance;
-            const range = 30;
+            
+            // Use same percentage-based range as onSliderMove
+            const rangePercent = 0.5;
+            const minRange = 60;
+            const range = Math.max(minRange, predictedDist * rangePercent * 2);
+            
             const adjustment = (sliderValue - 50) * (range / 100);
-            actualDistance = predictedDist + adjustment;
+            actualDistance = Math.max(0, predictedDist + adjustment);
         }
         
         // Add calibration sample to physics model
