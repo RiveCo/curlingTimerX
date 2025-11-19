@@ -150,10 +150,12 @@ export const NewTimer = {
             }
         });
 
-        // Calibration slider
-        this.calibrationSlider.addEventListener('input', (e) => {
-            this.onSliderMove(e.target.value);
-        });
+        // Calibration slider (if present)
+        if (this.calibrationSlider) {
+            this.calibrationSlider.addEventListener('input', (e) => {
+                this.onSliderMove(e.target.value);
+            });
+        }
 
         // Rabbit R1 scroll wheel support for rock adjustment
         window.addEventListener('scrollUp', () => {
@@ -213,23 +215,13 @@ export const NewTimer = {
         const onDragStart = (clientY) => {
             if (!this.currentThrow || this.isRunning) return false;
             
+            // Allow drag from anywhere on the canvas
+            isDragging = true;
             const rect = this.rinkCanvas.getBoundingClientRect();
-            const y = clientY - rect.top;
-            
-            // Check if user is touching near the rock
-            const currentDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
-            const scale = this.rinkCanvas.height / Physics.DIMENSIONS.hoglineToBackline;
-            const rockY = this.rinkCanvas.height - currentDistance * scale;
-            
-            // Allow drag if within 30 pixels of rock
-            if (Math.abs(y - rockY) < 30) {
-                isDragging = true;
-                dragStartY = y;
-                dragStartDistance = currentDistance;
-                this.isAdjustingRock = true;
-                return true;
-            }
-            return false;
+            dragStartY = clientY - rect.top;
+            dragStartDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+            this.isAdjustingRock = true;
+            return true;
         };
         
         const onDragMove = (clientY) => {
@@ -239,9 +231,9 @@ export const NewTimer = {
             const y = clientY - rect.top;
             const deltaY = dragStartY - y; // Inverted: drag up = positive distance
             
-            // Convert pixel movement to distance
+            // Convert pixel movement to distance with 1/4 sensitivity
             const scale = this.rinkCanvas.height / Physics.DIMENSIONS.hoglineToBackline;
-            const deltaDistance = deltaY / scale;
+            const deltaDistance = (deltaY / scale) * 0.25; // 1/4 sensitivity
             
             // Update adjusted distance
             const newDistance = Math.max(0, Math.min(Physics.DIMENSIONS.hoglineToBackline, dragStartDistance + deltaDistance));
@@ -699,36 +691,29 @@ export const NewTimer = {
             const clampedPredictedY = Math.max(10, Math.min(height - 10, predictedY));
             const clampedSweptY = Math.max(10, Math.min(height - 10, sweptY));
             
-            // Predicted position (without sweeping) - ROCK EMOJI with glow effect
-            ctx.font = '16px sans-serif';
-            ctx.textAlign = 'center';
-            
-            // Add glow effect to predicted rock
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = this.isAdjustingRock ? 'rgba(255, 100, 100, 0.8)' : 'rgba(255, 215, 0, 0.8)';
-            ctx.fillText('🥌', centerX, clampedPredictedY + 5);
-            ctx.shadowBlur = 0;
-            
-            // Swept position (with sweeping) - Green circle with label
-            ctx.fillStyle = 'rgba(34, 197, 94, 0.3)';
+            // Draw horizontal line for predicted position (without sweeping) - YELLOW/GOLD
+            ctx.strokeStyle = this.isAdjustingRock ? 'rgba(255, 100, 100, 1.0)' : 'rgba(255, 215, 0, 1.0)';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(centerX + 25, clampedSweptY, 8, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
-            ctx.lineWidth = 2;
+            ctx.moveTo(0, clampedPredictedY);
+            ctx.lineTo(width, clampedPredictedY);
             ctx.stroke();
             
-            // Draw connecting line between predicted and swept
-            if (Math.abs(clampedSweptY - clampedPredictedY) > 5) {
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([3, 3]);
-                ctx.beginPath();
-                ctx.moveTo(centerX, clampedPredictedY);
-                ctx.lineTo(centerX + 25, clampedSweptY);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
+            // Draw horizontal line for swept position - GREEN
+            ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, clampedSweptY);
+            ctx.lineTo(width, clampedSweptY);
+            ctx.stroke();
+            
+            // Draw small rock icon at predicted position
+            ctx.font = '8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = this.isAdjustingRock ? 'rgba(255, 100, 100, 0.8)' : 'rgba(255, 215, 0, 0.8)';
+            ctx.fillText('🥌', centerX, clampedPredictedY + 3);
+            ctx.shadowBlur = 0;
         }
     },
 
