@@ -150,10 +150,12 @@ export const NewTimer = {
             }
         });
 
-        // Calibration slider
-        this.calibrationSlider.addEventListener('input', (e) => {
-            this.onSliderMove(e.target.value);
-        });
+        // Calibration slider (if present)
+        if (this.calibrationSlider) {
+            this.calibrationSlider.addEventListener('input', (e) => {
+                this.onSliderMove(e.target.value);
+            });
+        }
 
         // Rabbit R1 scroll wheel support for rock adjustment
         window.addEventListener('scrollUp', () => {

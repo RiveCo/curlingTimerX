@@ -20,72 +20,60 @@
         </header>
 
         <main class="main-content">
-            <!-- Top Section: Curling Sheet Visualization -->
+            <!-- Full Height Canvas + Side Panel -->
             <section class="visualization-section">
-                <!-- NOTE: Canvas dimensions - height fills vertical space -->
-                <canvas id="rink-canvas" width="100" height="180" class="rink-canvas"></canvas>
-                <div class="info-panel">
-                    <div class="info-item">
-                        <div class="info-label">Time</div>
-                        <div id="info-time" class="info-value">0.000s</div>
+                <!-- Canvas takes full height -->
+                <canvas id="rink-canvas" width="80" height="230" class="rink-canvas"></canvas>
+                
+                <!-- Right side panel with all controls -->
+                <div class="side-panel">
+                    <!-- Info Items -->
+                    <div class="info-compact">
+                        <div class="info-row">
+                            <span class="info-label">Time:</span>
+                            <span id="info-time" class="info-value">0.000s</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Zone:</span>
+                            <span id="info-zone" class="info-value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Dist:</span>
+                            <span id="info-distance" class="info-value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">+Swp:</span>
+                            <span id="info-swept" class="info-value">-</span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Zone</div>
-                        <div id="info-zone" class="info-value">-</div>
+
+                    <!-- Zone Selection -->
+                    <div class="zone-section">
+                        <button id="zone-guard" class="zone-button">
+                            <span class="zone-icon">🛡️</span>
+                        </button>
+                        <button id="zone-draw" class="zone-button active">
+                            <span class="zone-icon">🎯</span>
+                        </button>
+                        <button id="zone-takeout" class="zone-button">
+                            <span class="zone-icon">❌</span>
+                        </button>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Distance</div>
-                        <div id="info-distance" class="info-value">-</div>
+
+                    <!-- Feedback -->
+                    <div class="feedback-section">
+                        <div id="sweep-recommendation" class="sweep-recommendation"></div>
+                        <div id="score-indicator" class="score-indicator"></div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">+Sweep</div>
-                        <div id="info-swept" class="info-value">-</div>
+
+                    <!-- Timer & Control -->
+                    <div class="control-section">
+                        <div id="new-timer-display" class="timer-display">0.000s</div>
+                        <button id="new-start-button" class="start-button">
+                            <span class="button-text">PRESS<br>& HOLD</span>
+                        </button>
                     </div>
                 </div>
-            </section>
-
-            <!-- Zone Selection -->
-            <section class="zone-section">
-                <button id="zone-guard" class="zone-button">
-                    <span class="zone-icon">🛡️</span>
-                    <span class="zone-name">Guard</span>
-                </button>
-                <button id="zone-draw" class="zone-button active">
-                    <span class="zone-icon">🎯</span>
-                    <span class="zone-name">Draw</span>
-                </button>
-                <button id="zone-takeout" class="zone-button">
-                    <span class="zone-icon">❌</span>
-                    <span class="zone-name">Takeout</span>
-                </button>
-            </section>
-
-            <!-- Feedback Section: Sweep Recommendation & Score -->
-            <section class="feedback-section">
-                <div id="sweep-recommendation" class="sweep-recommendation"></div>
-                <div id="score-indicator" class="score-indicator"></div>
-            </section>
-
-            <!-- Calibration Slider Section -->
-            <section class="calibration-section" style="display: none;">
-                <label class="calibration-label">Calibration: Actual Distance</label>
-                <input 
-                    type="range" 
-                    id="calibration-slider" 
-                    class="calibration-slider" 
-                    min="0" 
-                    max="100" 
-                    value="50"
-                >
-                <div id="calibration-value" class="calibration-value">Move to calibrate</div>
-            </section>
-
-            <!-- Bottom Section: Timer & Control -->
-            <section class="control-section">
-                <div id="new-timer-display" class="timer-display">0.000s</div>
-                <button id="new-start-button" class="start-button">
-                    <span class="button-text">PRESS<br>& HOLD</span>
-                </button>
             </section>
         </main>
 
