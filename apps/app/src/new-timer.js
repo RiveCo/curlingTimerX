@@ -580,30 +580,49 @@ export const NewTimer = {
         // Clear canvas
         ctx.clearRect(0, 0, width, height);
         
-        // Draw zones with shading
-        const hoglineToBackline = Physics.DIMENSIONS.hoglineToBackline;
-        const scale = height / hoglineToBackline; // pixels per foot
+        // Canvas visualization setup:
+        // - Bottom (0ft): Buffer zone below NEAR hog line (for very slow rocks)
+        // - NEAR HOG LINE: Where timing ends, thrower's side
+        // - Middle: House and playing area
+        // - FAR BACK LINE: 126ft from near hog
+        // - FAR HOG LINE: 146ft from near hog (extends past back line)
+        // - Top: Buffer zone above far hog line (for very fast rocks)
         
-        // Guard zone (bottom - near hog line)
+        const bufferZone = 20; // feet of buffer above/below for extreme shots
+        const totalDistance = Physics.DIMENSIONS.hoglineToHogline + bufferZone; // 146 + 20 = 166ft
+        const scale = height / totalDistance; // pixels per foot
+        const nearHogY = height - bufferZone * scale; // Near hog line position on canvas
+        
+        // Draw buffer zones (semi-transparent gray)
+        // Buffer below near hog (for rocks that don't reach hog line)
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.15)';
+        ctx.fillRect(0, nearHogY, width, bufferZone * scale);
+        
+        // Buffer above far hog (for very fast rocks that go past far hog)
+        const farHogY = nearHogY - Physics.DIMENSIONS.hoglineToHogline * scale;
+        ctx.fillRect(0, 0, width, farHogY);
+        
+        // Draw zones with shading (all measured from near hog line)
+        // Guard zone (0-54ft from near hog)
         ctx.fillStyle = 'rgba(100, 150, 255, 0.2)';
         const guardStart = 0;
         const guardEnd = Physics.DIMENSIONS.guardZoneEnd;
-        ctx.fillRect(0, height - guardEnd * scale, width, (guardEnd - guardStart) * scale);
+        ctx.fillRect(0, nearHogY - guardEnd * scale, width, (guardEnd - guardStart) * scale);
         
-        // Draw zone (middle - house)
+        // Draw zone (middle - house) (54-78ft from near hog)
         ctx.fillStyle = 'rgba(255, 200, 100, 0.2)';
         const drawStart = Physics.DIMENSIONS.drawZoneStart;
         const drawEnd = Physics.DIMENSIONS.drawZoneEnd;
-        ctx.fillRect(0, height - drawEnd * scale, width, (drawEnd - drawStart) * scale);
+        ctx.fillRect(0, nearHogY - drawEnd * scale, width, (drawEnd - drawStart) * scale);
         
-        // Takeout zone (top - beyond house)
+        // Takeout zone (78-126ft from near hog)
         ctx.fillStyle = 'rgba(255, 100, 100, 0.2)';
         const takeoutStart = Physics.DIMENSIONS.takeoutZoneStart;
         const takeoutEnd = Physics.DIMENSIONS.takeoutZoneEnd;
-        ctx.fillRect(0, height - takeoutEnd * scale, width, (takeoutEnd - takeoutStart) * scale);
+        ctx.fillRect(0, nearHogY - takeoutEnd * scale, width, (takeoutEnd - takeoutStart) * scale);
         
-        // Draw house circles
-        const teeY = height - Physics.DIMENSIONS.hoglineToTee * scale;
+        // Draw house circles (centered at tee line, 66ft from near hog)
+        const teeY = nearHogY - Physics.DIMENSIONS.hoglineToTee * scale;
         const centerX = width / 2;
         
         // 12-foot (outer) - Blue
@@ -631,50 +650,63 @@ export const NewTimer = {
         ctx.arc(centerX, teeY, 2, 0, 2 * Math.PI);
         ctx.fill();
         
-        // Draw FAR BACK LINE (top) - Reference line for rink visualization
+        // Draw FAR HOG LINE (opposite end from thrower) - THICK RED
+        ctx.strokeStyle = 'rgba(239, 68, 68, 1.0)';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, farHogY);
+        ctx.lineTo(width, farHogY);
+        ctx.stroke();
+        
+        // Add FAR HOG LINE label
+        ctx.fillStyle = 'rgba(239, 68, 68, 1.0)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('FAR HOG', 4, farHogY + 11);
+        
+        // Draw FAR BACK LINE (reference line, 126ft from near hog)
+        const farBackY = nearHogY - Physics.DIMENSIONS.hoglineToBackline * scale;
         ctx.strokeStyle = 'rgba(255, 68, 68, 0.5)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(0, 2.5);
-        ctx.lineTo(width, 2.5);
+        ctx.moveTo(0, farBackY);
+        ctx.lineTo(width, farBackY);
         ctx.stroke();
         
         // Add FAR BACK LINE label
         ctx.fillStyle = 'rgba(255, 68, 68, 0.7)';
         ctx.font = 'bold 7px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('BACK', 4, 10);
+        ctx.fillText('BACK', 4, farBackY + 9);
         
-        // Draw NEAR HOG LINE (bottom) - Timing END point (rock crosses here)
+        // Draw NEAR HOG LINE (thrower's side) - THICK GREEN
         ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.moveTo(0, height - 2.5);
-        ctx.lineTo(width, height - 2.5);
+        ctx.moveTo(0, nearHogY);
+        ctx.lineTo(width, nearHogY);
         ctx.stroke();
         
         // Add NEAR HOG LINE label
         ctx.fillStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.font = 'bold 9px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('HOG', 4, height - 5);
+        ctx.fillText('NEAR HOG', 4, nearHogY - 5);
         
-        // Add timing direction arrow/indicator (pointing down - from back to hog)
+        // Add timing direction arrow (rock travels upward from near hog)
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(width - 10, 20);
-        ctx.lineTo(width - 10, height - 15);
+        ctx.moveTo(width - 10, nearHogY - 10);
+        ctx.lineTo(width - 10, farHogY + 10);
         ctx.stroke();
         ctx.setLineDash([]);
         
-        // Arrow head pointing down (timing direction - back to hog)
+        // Arrow head pointing up (rock direction - toward far end)
         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.beginPath();
-        ctx.moveTo(width - 10, height - 15);
-        ctx.lineTo(width - 13, height - 21);
-        ctx.lineTo(width - 7, height - 21);
+        ctx.moveTo(width - 10, farHogY + 10);
+        ctx.lineTo(width - 13, farHogY + 16);
+        ctx.lineTo(width - 7, farHogY + 16);
         ctx.closePath();
         ctx.fill();
         
@@ -684,12 +716,13 @@ export const NewTimer = {
             const displayDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
             const sweptDistance = Physics.predictSweptDistance(displayDistance, 'normal');
             
-            const predictedY = height - displayDistance * scale;
-            const sweptY = height - sweptDistance * scale;
+            // Calculate Y positions from near hog line
+            const predictedY = nearHogY - displayDistance * scale;
+            const sweptY = nearHogY - sweptDistance * scale;
             
-            // Clamp positions to canvas bounds
-            const clampedPredictedY = Math.max(10, Math.min(height - 10, predictedY));
-            const clampedSweptY = Math.max(10, Math.min(height - 10, sweptY));
+            // Clamp positions to canvas bounds (allow buffer zones)
+            const clampedPredictedY = Math.max(5, Math.min(height - 5, predictedY));
+            const clampedSweptY = Math.max(5, Math.min(height - 5, sweptY));
             
             // Draw horizontal line for predicted position (without sweeping) - YELLOW/GOLD
             ctx.strokeStyle = this.isAdjustingRock ? 'rgba(255, 100, 100, 1.0)' : 'rgba(255, 215, 0, 1.0)';
