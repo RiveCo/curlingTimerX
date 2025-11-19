@@ -399,53 +399,93 @@ export const NewTimer = {
         ctx.arc(centerX, teeY, 2, 0, 2 * Math.PI);
         ctx.fill();
         
-        // Draw hog line (bottom)
-        ctx.strokeStyle = 'rgba(34, 197, 94, 0.8)';
-        ctx.lineWidth = 3;
+        // Draw BACK LINE (top) - Timing END point - THICKER and MORE VISIBLE
+        ctx.strokeStyle = 'rgba(255, 68, 68, 1.0)';
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.moveTo(0, height);
-        ctx.lineTo(width, height);
+        ctx.moveTo(0, 2.5);
+        ctx.lineTo(width, 2.5);
         ctx.stroke();
         
-        // Draw back line (top)
-        ctx.strokeStyle = 'rgba(255, 68, 68, 0.8)';
+        // Add BACK LINE label
+        ctx.fillStyle = 'rgba(255, 68, 68, 1.0)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('BACK', 4, 12);
+        
+        // Draw HOG LINE (bottom) - Timing START point - THICKER and MORE VISIBLE
+        ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(width, 0);
+        ctx.moveTo(0, height - 2.5);
+        ctx.lineTo(width, height - 2.5);
         ctx.stroke();
+        
+        // Add HOG LINE label
+        ctx.fillStyle = 'rgba(34, 197, 94, 1.0)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('HOG', 4, height - 5);
+        
+        // Add timing direction arrow/indicator
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(10, height - 15);
+        ctx.lineTo(10, 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Arrow head pointing up (timing direction)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(10, 20);
+        ctx.lineTo(7, 26);
+        ctx.lineTo(13, 26);
+        ctx.closePath();
+        ctx.fill();
         
         // Draw predicted positions if we have a current throw
         if (this.currentThrow) {
             const predictedY = height - this.currentThrow.predictedDistance * scale;
             const sweptY = height - this.currentThrow.sweptDistance * scale;
             
-            // Predicted position (without sweeping) - Yellow
-            ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+            // Clamp positions to canvas bounds
+            const clampedPredictedY = Math.max(10, Math.min(height - 10, predictedY));
+            const clampedSweptY = Math.max(10, Math.min(height - 10, sweptY));
+            
+            // Predicted position (without sweeping) - Yellow - ROCK EMOJI
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🥌', centerX, clampedPredictedY + 5);
+            
+            // Add glow effect to predicted rock
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+            ctx.fillText('🥌', centerX, clampedPredictedY + 5);
+            ctx.shadowBlur = 0;
+            
+            // Swept position (with sweeping) - Green circle with label
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.3)';
             ctx.beginPath();
-            ctx.arc(centerX, predictedY, 6, 0, 2 * Math.PI);
+            ctx.arc(centerX + 25, clampedSweptY, 8, 0, 2 * Math.PI);
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Swept position (with sweeping) - Green
-            ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
-            ctx.beginPath();
-            ctx.arc(centerX, sweptY, 6, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Draw connecting line
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(centerX, predictedY);
-            ctx.lineTo(centerX, sweptY);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            // Draw connecting line between predicted and swept
+            if (Math.abs(clampedSweptY - clampedPredictedY) > 5) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(centerX, clampedPredictedY);
+                ctx.lineTo(centerX + 25, clampedSweptY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
         }
     },
 
