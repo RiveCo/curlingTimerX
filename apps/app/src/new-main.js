@@ -48,5 +48,14 @@ NewTimer.acceptCalibration = function(actualDistance) {
     updateCalibrationDisplay();
 };
 
+// Set up callback to update calibration display when timer starts
+// (calibration happens at start of new throw if rock was adjusted)
+const originalStartTimer = NewTimer.startTimer;
+NewTimer.startTimer = function() {
+    originalStartTimer.call(this);
+    // Update display after timer starts (calibration may have occurred)
+    updateCalibrationDisplay();
+};
+
 console.log('Curling Predictor (Experimental) initialized');
 console.log('Calibration:', Physics.getCalibrationInfo());

@@ -74,9 +74,40 @@ export const NewTimer = {
         // Set initial zone
         this.setZone('draw');
         
+        // Create initial throw preview for 3.6s (button weight)
+        this.createInitialThrowPreview();
+        
         // Initialize display
         this.updateDisplay();
         this.renderRink();
+    },
+
+    /**
+     * Create initial throw preview showing 3.6s throw to button
+     */
+    createInitialThrowPreview() {
+        // Create a throw record for 3.6 seconds (typical draw weight to button)
+        const hogToBackTime = 3.6; // seconds
+        const velocity = Physics.calculateVelocity(hogToBackTime);
+        const predictedDistance = Physics.predictDistance(velocity);
+        const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
+        const zone = Physics.classifyZone(predictedDistance);
+        const sweepRec = Physics.getSweepRecommendation(predictedDistance, this.selectedZone);
+        const willScore = Physics.willScore(predictedDistance);
+        
+        this.currentThrow = {
+            time: hogToBackTime,
+            velocity: velocity,
+            predictedDistance: predictedDistance,
+            sweptDistance: sweptDistance,
+            zone: zone,
+            sweepRecommendation: sweepRec,
+            willScore: willScore,
+            intendedZone: this.selectedZone
+        };
+        
+        // Set elapsed time to match the preview
+        this.elapsedTime = hogToBackTime * 1000; // Convert to milliseconds
     },
 
     /**
