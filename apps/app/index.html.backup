@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Curling Timer X</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <!-- Main Timer Screen -->
+    <div id="main-screen" class="screen">
+        <header class="header">
+            <h1 class="app-title">Curling Timer X</h1>
+            <button
+id="settings-button"
+class="settings-button"
+aria-label="Settings"
+>
+                <svg
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+>
+                    <circle
+cx="12"
+cy="12"
+r="3"
+></circle>
+                    <path d="M12 1v6m0 6v6m-5.2-13.8l4.2 4.2m3 3l4.2 4.2M1 12h6m6 0h6M4.2 19.8l4.2-4.2m3-3l4.2-4.2"></path>
+                </svg>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <!-- Top Section: Rock Visualization & Mode Selection -->
+            <section class="top-section">
+                <!-- Rock Visualization -->
+                <div id="rock-visualization" class="rock-visualization">
+                    <div class="rink">
+                        <div class="backline"></div>
+                        <div class="house">
+                            <div class="house-circle outer-circle"></div>
+                            <div class="house-circle middle-circle"></div>
+                            <div class="house-circle inner-circle"></div>
+                            <div class="house-circle button-circle"></div>
+                        </div>
+                        <div class="rock" id="rock-icon">🥌</div>
+                        <div class="hogline"></div>
+                    </div>
+                </div>
+                
+                <!-- Mode Selection - Vertical Stack -->
+                <div class="mode-selection">
+                    <button
+id="mode-takeout"
+class="mode-button"
+data-mode="takeout"
+>
+                        <span class="mode-name">Takeout</span>
+                        <span class="mode-time">3.00s</span>
+                    </button>
+                    <button
+id="mode-guard"
+class="mode-button"
+data-mode="guard"
+>
+                        <span class="mode-name">Guard</span>
+                        <span class="mode-time">3.90s</span>
+                    </button>
+                    <button
+id="mode-button"
+class="mode-button"
+data-mode="button"
+>
+                        <span class="mode-name">Button</span>
+                        <span class="mode-time">3.65s</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Middle Section: Feedback Display -->
+            <section class="middle-section">
+                <div id="feedback-display" class="feedback-display"></div>
+            </section>
+
+            <!-- Bottom Section: Timer & Control Button -->
+            <section class="bottom-section">
+                <div id="timer-display" class="timer-display">0.000s</div>
+                <button id="start-button" class="start-button">
+                    <span class="button-text">Press &<br>Hold</span>
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen settings-screen">
+        <header class="header">
+            <button
+id="back-button"
+class="back-button"
+aria-label="Back"
+>
+                <svg
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+>
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <h2 class="app-title">Settings</h2>
+            <div class="header-spacer"></div>
+        </header>
+
+        <main class="settings-content">
+            <!-- Button Time Setting -->
+            <section class="setting-item">
+                <h3 class="setting-label">Button Default Time</h3>
+                <div id="button-time-wheel" class="scroll-wheel"></div>
+            </section>
+
+            <!-- Guard Time Setting -->
+            <section class="setting-item">
+                <h3 class="setting-label">Guard Default Time</h3>
+                <div id="guard-time-wheel" class="scroll-wheel"></div>
+            </section>
+
+            <!-- Takeout Time Setting -->
+            <section class="setting-item">
+                <h3 class="setting-label">Takeout Default Time</h3>
+                <div id="takeout-time-wheel" class="scroll-wheel"></div>
+            </section>
+
+            <!-- Threshold Setting -->
+            <section class="setting-item">
+                <h3 class="setting-label">Threshold</h3>
+                <div id="threshold-wheel" class="scroll-wheel"></div>
+            </section>
+
+            <!-- Max Rocks Setting -->
+            <section class="setting-item">
+                <h3 class="setting-label">Rock Trail Count</h3>
+                <div id="max-rocks-wheel" class="scroll-wheel"></div>
+            </section>
+
+            <div class="settings-info">
+                <p>Adjust default times and threshold for each mode.</p>
+                <p>Threshold determines the acceptable range for "Perfect" timing.</p>
+                <p>Rock Trail Count sets how many rocks are displayed before resetting (1-8).</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
