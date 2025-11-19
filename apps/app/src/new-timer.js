@@ -74,9 +74,40 @@ export const NewTimer = {
         // Set initial zone
         this.setZone('draw');
         
+        // Create initial throw preview for 3.6s (button weight)
+        this.createInitialThrowPreview();
+        
         // Initialize display
         this.updateDisplay();
         this.renderRink();
+    },
+
+    /**
+     * Create initial throw preview showing 3.6s throw to button
+     */
+    createInitialThrowPreview() {
+        // Create a throw record for 3.6 seconds (typical draw weight to button)
+        const hogToBackTime = 3.6; // seconds
+        const velocity = Physics.calculateVelocity(hogToBackTime);
+        const predictedDistance = Physics.predictDistance(velocity);
+        const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
+        const zone = Physics.classifyZone(predictedDistance);
+        const sweepRec = Physics.getSweepRecommendation(predictedDistance, this.selectedZone);
+        const willScore = Physics.willScore(predictedDistance);
+        
+        this.currentThrow = {
+            time: hogToBackTime,
+            velocity: velocity,
+            predictedDistance: predictedDistance,
+            sweptDistance: sweptDistance,
+            zone: zone,
+            sweepRecommendation: sweepRec,
+            willScore: willScore,
+            intendedZone: this.selectedZone
+        };
+        
+        // Set elapsed time to match the preview
+        this.elapsedTime = hogToBackTime * 1000; // Convert to milliseconds
     },
 
     /**
@@ -298,6 +329,13 @@ export const NewTimer = {
         this.adjustedDistance = distance;
         this.isAdjustingRock = true;
         
+        // Auto-calibrate immediately when user adjusts the rock
+        // This provides instant feedback and improves the model
+        if (this.adjustedDistance !== null && this.currentThrow.time) {
+            Physics.addCalibrationSample(this.currentThrow.time, this.adjustedDistance);
+            console.log('Auto-calibrated from adjustment:', this.currentThrow.time, 's →', this.adjustedDistance.toFixed(1), 'ft');
+        }
+        
         // Update displays
         this.updateDisplay();
         this.renderRink();
@@ -346,9 +384,12 @@ export const NewTimer = {
             this.previousThrow = { ...this.currentThrow, finalDistance };
             this.resetCalibrationSlider();
             
-            // Auto-calibrate if rock was adjusted
-            if (this.adjustedDistance !== null) {
-                Physics.addCalibrationSample(this.currentThrow.time, this.adjustedDistance);
+            // Note: If rock was adjusted, calibration already happened in setAdjustedDistance
+            // Only show calibration slider if rock was NOT adjusted
+            if (this.adjustedDistance === null) {
+                // Will show calibration slider after this throw completes
+            } else {
+                // Already calibrated via adjustment, clear previous throw
                 this.previousThrow = null;
             }
         }
