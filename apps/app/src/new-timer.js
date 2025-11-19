@@ -209,8 +209,16 @@ export const NewTimer = {
         // Remove active state from button
         this.startButton.classList.remove('active');
         
-        // Create throw record
+        // Create throw record only if we have a valid time (at least 1 second for realistic throw)
         const hogToBackTime = this.elapsedTime / 1000; // Convert to seconds
+        
+        // Validate minimum time (at least 1.5 seconds for a realistic curling throw)
+        if (hogToBackTime < 1.5) {
+            console.log('Timer stopped too quickly - throw ignored (min 1.5s)');
+            this.updateDisplay();
+            return;
+        }
+        
         const velocity = Physics.calculateVelocity(hogToBackTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
