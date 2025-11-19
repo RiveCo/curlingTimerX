@@ -22,7 +22,25 @@
         <main class="main-content">
             <!-- Top Section: Curling Sheet Visualization -->
             <section class="visualization-section">
-                <canvas id="rink-canvas" width="220" height="160" class="rink-canvas"></canvas>
+                <canvas id="rink-canvas" width="120" height="180" class="rink-canvas"></canvas>
+                <div class="info-panel">
+                    <div class="info-item">
+                        <div class="info-label">Time</div>
+                        <div id="info-time" class="info-value">0.000s</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Zone</div>
+                        <div id="info-zone" class="info-value">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Distance</div>
+                        <div id="info-distance" class="info-value">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">+Sweep</div>
+                        <div id="info-swept" class="info-value">-</div>
+                    </div>
+                </div>
             </section>
 
             <!-- Zone Selection -->

@@ -34,6 +34,10 @@ export const NewTimer = {
     predictedPosition: null,
     sweptPosition: null,
     zoneDisplay: null,
+    infoTime: null,
+    infoZone: null,
+    infoDistance: null,
+    infoSwept: null,
 
     /**
      * Initialize the new timer module
@@ -55,6 +59,10 @@ export const NewTimer = {
         this.predictedPosition = document.getElementById('predicted-pos');
         this.sweptPosition = document.getElementById('swept-pos');
         this.zoneDisplay = document.getElementById('zone-display');
+        this.infoTime = document.getElementById('info-time');
+        this.infoZone = document.getElementById('info-zone');
+        this.infoDistance = document.getElementById('info-distance');
+        this.infoSwept = document.getElementById('info-swept');
 
         // Set up event listeners
         this.setupEventListeners();
@@ -270,6 +278,28 @@ export const NewTimer = {
     updateDisplay() {
         const timeInSeconds = (this.elapsedTime / 1000).toFixed(3);
         this.timerDisplay.textContent = `${timeInSeconds}s`;
+        
+        // Update info panel
+        if (this.infoTime) {
+            this.infoTime.textContent = `${timeInSeconds}s`;
+        }
+        
+        if (this.currentThrow) {
+            if (this.infoZone) {
+                const zoneNames = { guard: 'Guard', draw: 'Draw', takeout: 'Takeout' };
+                this.infoZone.textContent = zoneNames[this.currentThrow.zone] || '-';
+            }
+            if (this.infoDistance) {
+                this.infoDistance.textContent = `${this.currentThrow.predictedDistance.toFixed(1)}ft`;
+            }
+            if (this.infoSwept) {
+                this.infoSwept.textContent = `${this.currentThrow.sweptDistance.toFixed(1)}ft`;
+            }
+        } else {
+            if (this.infoZone) this.infoZone.textContent = '-';
+            if (this.infoDistance) this.infoDistance.textContent = '-';
+            if (this.infoSwept) this.infoSwept.textContent = '-';
+        }
     },
 
     /**
