@@ -22,6 +22,10 @@ export const NewTimer = {
     // Calibration state
     calibrationSliderMoved: false,
     
+    // Rock adjustment state
+    isAdjustingRock: false,
+    adjustedDistance: null, // Manually adjusted distance (overrides predicted)
+    
     // DOM elements
     timerDisplay: null,
     startButton: null,
@@ -120,6 +124,22 @@ export const NewTimer = {
             this.onSliderMove(e.target.value);
         });
 
+        // Rabbit R1 scroll wheel support for rock adjustment
+        window.addEventListener('scrollUp', () => {
+            if (this.currentThrow && !this.isRunning) {
+                this.adjustRockPosition(1); // Move rock up (further)
+            }
+        });
+        
+        window.addEventListener('scrollDown', () => {
+            if (this.currentThrow && !this.isRunning) {
+                this.adjustRockPosition(-1); // Move rock down (shorter)
+            }
+        });
+
+        // Canvas drag support for rock adjustment
+        this.setupCanvasDragSupport();
+
         // Rabbit R1 side button support
         window.addEventListener('sideClick', () => {
             if (this.isRunning) {
@@ -133,14 +153,154 @@ export const NewTimer = {
             }
         });
 
-        // Keyboard fallback (Space bar = device button)
+        // Keyboard fallback (Space bar = device button, Arrow keys = scroll wheel)
         window.addEventListener('keydown', (event) => {
             if (event.code === 'Space' && !event.repeat) {
                 event.preventDefault();
                 const sideClickEvent = new CustomEvent('sideClick');
                 window.dispatchEvent(sideClickEvent);
+            } else if (event.code === 'ArrowUp' && !event.repeat) {
+                event.preventDefault();
+                const scrollUpEvent = new CustomEvent('scrollUp');
+                window.dispatchEvent(scrollUpEvent);
+            } else if (event.code === 'ArrowDown' && !event.repeat) {
+                event.preventDefault();
+                const scrollDownEvent = new CustomEvent('scrollDown');
+                window.dispatchEvent(scrollDownEvent);
             }
         });
+    },
+
+    /**
+     * Set up canvas drag support for rock adjustment
+     */
+    setupCanvasDragSupport() {
+        let isDragging = false;
+        let dragStartY = 0;
+        let dragStartDistance = 0;
+        
+        const onDragStart = (clientY) => {
+            if (!this.currentThrow || this.isRunning) return false;
+            
+            const rect = this.rinkCanvas.getBoundingClientRect();
+            const y = clientY - rect.top;
+            
+            // Check if user is touching near the rock
+            const currentDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+            const scale = this.rinkCanvas.height / Physics.DIMENSIONS.hoglineToBackline;
+            const rockY = this.rinkCanvas.height - currentDistance * scale;
+            
+            // Allow drag if within 30 pixels of rock
+            if (Math.abs(y - rockY) < 30) {
+                isDragging = true;
+                dragStartY = y;
+                dragStartDistance = currentDistance;
+                this.isAdjustingRock = true;
+                return true;
+            }
+            return false;
+        };
+        
+        const onDragMove = (clientY) => {
+            if (!isDragging) return;
+            
+            const rect = this.rinkCanvas.getBoundingClientRect();
+            const y = clientY - rect.top;
+            const deltaY = dragStartY - y; // Inverted: drag up = positive distance
+            
+            // Convert pixel movement to distance
+            const scale = this.rinkCanvas.height / Physics.DIMENSIONS.hoglineToBackline;
+            const deltaDistance = deltaY / scale;
+            
+            // Update adjusted distance
+            const newDistance = Math.max(0, Math.min(Physics.DIMENSIONS.hoglineToBackline, dragStartDistance + deltaDistance));
+            this.setAdjustedDistance(newDistance);
+        };
+        
+        const onDragEnd = () => {
+            if (isDragging) {
+                isDragging = false;
+                this.isAdjustingRock = false;
+            }
+        };
+        
+        // Touch events
+        this.rinkCanvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                if (onDragStart(e.touches[0].clientY)) {
+                    e.preventDefault();
+                }
+            }
+        });
+        
+        this.rinkCanvas.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                e.preventDefault();
+                onDragMove(e.touches[0].clientY);
+            }
+        });
+        
+        this.rinkCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            onDragEnd();
+        });
+        
+        this.rinkCanvas.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            onDragEnd();
+        });
+        
+        // Mouse events (for desktop)
+        this.rinkCanvas.addEventListener('mousedown', (e) => {
+            if (onDragStart(e.clientY)) {
+                e.preventDefault();
+            }
+        });
+        
+        this.rinkCanvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                onDragMove(e.clientY);
+            }
+        });
+        
+        this.rinkCanvas.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            onDragEnd();
+        });
+        
+        this.rinkCanvas.addEventListener('mouseleave', (e) => {
+            onDragEnd();
+        });
+    },
+
+    /**
+     * Adjust rock position using scroll wheel
+     * @param {number} direction - 1 for up/further, -1 for down/shorter
+     */
+    adjustRockPosition(direction) {
+        if (!this.currentThrow) return;
+        
+        const currentDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+        const adjustment = direction * 2; // 2 feet per scroll
+        const newDistance = Math.max(0, Math.min(Physics.DIMENSIONS.hoglineToBackline, currentDistance + adjustment));
+        
+        this.setAdjustedDistance(newDistance);
+    },
+
+    /**
+     * Set adjusted distance for current throw
+     * @param {number} distance - New distance in feet
+     */
+    setAdjustedDistance(distance) {
+        if (!this.currentThrow) return;
+        
+        this.adjustedDistance = distance;
+        this.isAdjustingRock = true;
+        
+        // Update displays
+        this.updateDisplay();
+        this.renderRink();
     },
 
     /**
@@ -167,6 +327,7 @@ export const NewTimer = {
         this.updateZoneDisplay();
         if (this.currentThrow) {
             this.renderRink();
+            this.updateDisplay(); // Update distance description
         }
     },
 
@@ -180,16 +341,26 @@ export const NewTimer = {
         
         // If there's a previous throw that wasn't calibrated, make it the candidate
         if (this.currentThrow && !this.calibrationSliderMoved) {
-            this.previousThrow = { ...this.currentThrow };
+            // Use adjusted distance for calibration if it was adjusted
+            const finalDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+            this.previousThrow = { ...this.currentThrow, finalDistance };
             this.resetCalibrationSlider();
+            
+            // Auto-calibrate if rock was adjusted
+            if (this.adjustedDistance !== null) {
+                Physics.addCalibrationSample(this.currentThrow.time, this.adjustedDistance);
+                this.previousThrow = null;
+            }
         }
         
         this.isRunning = true;
         this.startTime = performance.now();
         this.elapsedTime = 0;
         
-        // Clear current throw
+        // Clear current throw and adjusted distance
         this.currentThrow = null;
+        this.adjustedDistance = null;
+        this.isAdjustingRock = false;
         
         // Add active state to button
         this.startButton.classList.add('active');
@@ -285,15 +456,23 @@ export const NewTimer = {
         }
         
         if (this.currentThrow) {
+            // Use adjusted distance if available
+            const displayDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+            
             if (this.infoZone) {
                 const zoneNames = { guard: 'Guard', draw: 'Draw', takeout: 'Takeout' };
                 this.infoZone.textContent = zoneNames[this.currentThrow.zone] || '-';
             }
             if (this.infoDistance) {
-                this.infoDistance.textContent = `${this.currentThrow.predictedDistance.toFixed(1)}ft`;
+                // Use new distance description format
+                const description = Physics.getDistanceDescription(displayDistance, this.selectedZone);
+                this.infoDistance.textContent = description;
             }
             if (this.infoSwept) {
-                this.infoSwept.textContent = `${this.currentThrow.sweptDistance.toFixed(1)}ft`;
+                // Calculate swept distance based on current position
+                const sweptDist = Physics.predictSweptDistance(displayDistance, 'normal');
+                const sweptDescription = Physics.getDistanceDescription(sweptDist, this.selectedZone);
+                this.infoSwept.textContent = sweptDescription;
             }
         } else {
             if (this.infoZone) this.infoZone.textContent = '-';
@@ -478,8 +657,12 @@ export const NewTimer = {
         
         // Draw predicted positions if we have a current throw
         if (this.currentThrow) {
-            const predictedY = height - this.currentThrow.predictedDistance * scale;
-            const sweptY = height - this.currentThrow.sweptDistance * scale;
+            // Use adjusted distance if available
+            const displayDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+            const sweptDistance = Physics.predictSweptDistance(displayDistance, 'normal');
+            
+            const predictedY = height - displayDistance * scale;
+            const sweptY = height - sweptDistance * scale;
             
             // Clamp positions to canvas bounds
             const clampedPredictedY = Math.max(10, Math.min(height - 10, predictedY));
@@ -491,7 +674,7 @@ export const NewTimer = {
             
             // Add glow effect to predicted rock
             ctx.shadowBlur = 10;
-            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+            ctx.shadowColor = this.isAdjustingRock ? 'rgba(255, 100, 100, 0.8)' : 'rgba(255, 215, 0, 0.8)';
             ctx.fillText('🥌', centerX, clampedPredictedY + 5);
             ctx.shadowBlur = 0;
             

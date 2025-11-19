@@ -20,7 +20,7 @@ export const Physics = {
 
     // Physics constants
     CONSTANTS: {
-        defaultDeceleration: 1.8, // ft/s² - initial guess based on realistic curling physics, will be calibrated
+        defaultDeceleration: 9.28, // ft/s² - calibrated so 3.6s lands on button (66 ft), will be further calibrated
         sweepingEffect: 0.05, // 5% distance increase with normal sweep
         hardSweepEffect: 0.10, // 10% distance increase with hard sweep
         // Sweep recommendation thresholds
@@ -32,7 +32,7 @@ export const Physics = {
 
     // Calibration data
     calibration: {
-        deceleration: 1.8, // Current deceleration constant (ft/s²) - realistic default
+        deceleration: 9.28, // Current deceleration constant (ft/s²) - calibrated so 3.6s lands on button
         samples: [], // Array of calibration samples: {time, distance, velocity, deceleration}
         maxSamples: 10, // Keep last 10 calibration throws
     },
@@ -143,6 +143,60 @@ export const Physics = {
             default:
                 return this.DIMENSIONS.hoglineToTee;
         }
+    },
+
+    /**
+     * Get human-readable distance description relative to zone reference point
+     * 
+     * @param {number} distance - Distance from hog line (feet)
+     * @param {string} intendedZone - Intended zone: 'guard', 'draw', or 'takeout'
+     * @returns {string} Human-readable distance description
+     */
+    getDistanceDescription(distance, intendedZone) {
+        const zoneCenter = this.getZoneCenter(intendedZone);
+        const diff = distance - zoneCenter;
+        const absDiff = Math.abs(diff);
+        
+        let description = '';
+        
+        if (intendedZone === 'draw') {
+            // For draw shots, reference from button
+            if (absDiff < 1) {
+                description = 'On button';
+            } else if (diff > 0) {
+                description = `${absDiff.toFixed(1)}ft past button`;
+            } else {
+                description = `${absDiff.toFixed(1)}ft from button`;
+            }
+        } else if (intendedZone === 'guard') {
+            // For guard shots, reference from front of house
+            const frontOfHouse = this.DIMENSIONS.hoglineToFrontOfHouse;
+            const guardDiff = distance - frontOfHouse;
+            const absGuardDiff = Math.abs(guardDiff);
+            
+            if (absGuardDiff < 1) {
+                description = 'At front of house';
+            } else if (guardDiff < 0) {
+                description = `${absGuardDiff.toFixed(1)}ft in front of house`;
+            } else {
+                description = `${absGuardDiff.toFixed(1)}ft into house`;
+            }
+        } else if (intendedZone === 'takeout') {
+            // For takeout shots, reference from back of house
+            const backOfHouse = this.DIMENSIONS.hoglineToBackOfHouse;
+            const takeoutDiff = distance - backOfHouse;
+            const absTakeoutDiff = Math.abs(takeoutDiff);
+            
+            if (absTakeoutDiff < 1) {
+                description = 'At back of house';
+            } else if (takeoutDiff > 0) {
+                description = `${absTakeoutDiff.toFixed(1)}ft past back`;
+            } else {
+                description = `${absTakeoutDiff.toFixed(1)}ft before back`;
+            }
+        }
+        
+        return description;
     },
 
     /**
