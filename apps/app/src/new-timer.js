@@ -582,17 +582,18 @@ export const NewTimer = {
         
         // Canvas visualization: Shows the FAR END (target end) of the rink
         // From bottom to top:
-        // - Small buffer (10ft)
-        // - FAR HOG LINE (the hog line on far end that rock crosses)
-        // - HOUSE (scoring zone, centered at 66ft from near hog)
-        // - FAR BACK LINE (end line, at 126ft from near hog)
-        // - Small buffer (10ft)
+        // - Small buffer (~5ft)
+        // - FAR HOG LINE (at 126ft from near hog line)
+        // - Guard zone (space between far hog and house front, ~15ft)
+        // - HOUSE (scoring zone, centered at tee line 147ft from near hog)
+        // - FAR BACK LINE (at 153ft from near hog - TOUCHING the back of house)
+        // - Small buffer (~5ft)
         
-        // The canvas shows from 40ft to 140ft from the near hog line
-        // This gives us the far hog (at ~54-78ft visible range) + house + back line
-        const viewportStart = 40; // Start viewing from 40ft (before far hog crosses)
-        const viewportEnd = 140; // End at 140ft (past back line)
-        const viewportRange = viewportEnd - viewportStart; // 100ft visible range
+        // The canvas shows from 118ft to 160ft from the near hog line
+        // This gives us: buffer + far hog + guard zone + house + back line + buffer
+        const viewportStart = 118; // Start viewing from 118ft (8ft before far hog line)
+        const viewportEnd = 160; // End at 160ft (7ft past back line)
+        const viewportRange = viewportEnd - viewportStart; // 42ft visible range
         const scale = height / viewportRange; // pixels per foot
         
         // Helper function to convert distance from near hog to canvas Y position
@@ -601,27 +602,25 @@ export const NewTimer = {
         };
         
         // Draw buffer zones (semi-transparent gray)
-        // Buffer below far hog (40-54ft range)
+        // Buffer below far hog (118-126ft range)
         ctx.fillStyle = 'rgba(50, 50, 50, 0.1)';
-        ctx.fillRect(0, distanceToY(54), width, (54 - viewportStart) * scale);
+        ctx.fillRect(0, distanceToY(Physics.DIMENSIONS.hoglineToHogline), width, (Physics.DIMENSIONS.hoglineToHogline - viewportStart) * scale);
         
-        // Buffer above back line (126-140ft range)
-        ctx.fillRect(0, 0, width, distanceToY(126));
+        // Buffer above back line (153-160ft range)
+        ctx.fillRect(0, 0, width, distanceToY(Physics.DIMENSIONS.hoglineToBackline));
         
         // Draw zones with shading
-        // Guard zone (54-66ft from near hog - between far hog and house)
+        // Guard zone (126-141ft from near hog - between far hog and front of house)
         ctx.fillStyle = 'rgba(100, 150, 255, 0.2)';
-        ctx.fillRect(0, distanceToY(66), width, 12 * scale);
+        const guardHeight = (Physics.DIMENSIONS.guardZoneEnd - Physics.DIMENSIONS.guardZoneStart) * scale;
+        ctx.fillRect(0, distanceToY(Physics.DIMENSIONS.guardZoneEnd), width, guardHeight);
         
-        // House zone (66-78ft from near hog)
+        // House zone (141-153ft from near hog - the 12-foot circle)
         ctx.fillStyle = 'rgba(255, 200, 100, 0.25)';
-        ctx.fillRect(0, distanceToY(78), width, 12 * scale);
+        const houseHeight = (Physics.DIMENSIONS.drawZoneEnd - Physics.DIMENSIONS.drawZoneStart) * scale;
+        ctx.fillRect(0, distanceToY(Physics.DIMENSIONS.drawZoneEnd), width, houseHeight);
         
-        // Takeout zone (78-126ft from near hog - between house and back line)
-        ctx.fillStyle = 'rgba(255, 100, 100, 0.2)';
-        ctx.fillRect(0, distanceToY(126), width, 48 * scale);
-        
-        // Draw house circles (centered at tee line, 66ft from near hog)
+        // Draw house circles (centered at tee line, 147ft from near hog)
         const teeY = distanceToY(Physics.DIMENSIONS.hoglineToTee);
         const centerX = width / 2;
         
@@ -629,19 +628,19 @@ export const NewTimer = {
         ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(centerX, teeY, 12 * scale, 0, 2 * Math.PI);
+        ctx.arc(centerX, teeY, 6 * scale, 0, 2 * Math.PI);
         ctx.stroke();
         
         // 8-foot - White
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.beginPath();
-        ctx.arc(centerX, teeY, 8 * scale, 0, 2 * Math.PI);
+        ctx.arc(centerX, teeY, 4 * scale, 0, 2 * Math.PI);
         ctx.stroke();
         
         // 4-foot - Red
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
         ctx.beginPath();
-        ctx.arc(centerX, teeY, 4 * scale, 0, 2 * Math.PI);
+        ctx.arc(centerX, teeY, 2 * scale, 0, 2 * Math.PI);
         ctx.stroke();
         
         // Button (center)
@@ -650,8 +649,8 @@ export const NewTimer = {
         ctx.arc(centerX, teeY, 2, 0, 2 * Math.PI);
         ctx.fill();
         
-        // Draw FAR HOG LINE (at 54ft from near hog - this is the hog line on the far end)
-        const farHogY = distanceToY(54);
+        // Draw FAR HOG LINE (at 126ft from near hog - this is the hog line on the far end)
+        const farHogY = distanceToY(Physics.DIMENSIONS.hoglineToHogline);
         ctx.strokeStyle = 'rgba(34, 197, 94, 1.0)';
         ctx.lineWidth = 5;
         ctx.beginPath();
@@ -665,8 +664,8 @@ export const NewTimer = {
         ctx.textAlign = 'left';
         ctx.fillText('HOG LINE', 4, farHogY - 5);
         
-        // Draw FAR BACK LINE (end line at 126ft from near hog)
-        const farBackY = distanceToY(126);
+        // Draw FAR BACK LINE (end line at 153ft from near hog - touching back of house)
+        const farBackY = distanceToY(Physics.DIMENSIONS.hoglineToBackline);
         ctx.strokeStyle = 'rgba(239, 68, 68, 1.0)';
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -708,7 +707,7 @@ export const NewTimer = {
             const predictedY = distanceToY(displayDistance);
             const sweptY = distanceToY(sweptDistance);
             
-            // Only show rocks that are within the viewport (40-140ft range)
+            // Only show rocks that are within the viewport (118-160ft range)
             if (displayDistance >= viewportStart && displayDistance <= viewportEnd) {
                 // Draw horizontal line for predicted position (without sweeping) - YELLOW/GOLD
                 ctx.strokeStyle = this.isAdjustingRock ? 'rgba(255, 100, 100, 1.0)' : 'rgba(255, 215, 0, 1.0)';

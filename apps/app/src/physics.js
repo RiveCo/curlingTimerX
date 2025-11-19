@@ -7,22 +7,22 @@ export const Physics = {
     // Curling rink dimensions (in feet, per WCF rules)
     DIMENSIONS: {
         backlineToHogline: 21, // feet - distance from back line to near hog line (STANDARD DELIVERY TIMING)
-        hoglineToHogline: 146, // feet - distance from near hog line to far hog line
-        hoglineToBackline: 126, // feet - distance from hog line to far back line
-        hoglineToTee: 66, // feet - distance from near hog line to center of house (tee line)
-        hoglineToFrontOfHouse: 54, // feet - distance from hog line to front 12-foot circle
-        hoglineToBackOfHouse: 78, // feet - distance from hog line to back 12-foot circle
-        guardZoneStart: 0, // feet from hog line - guards are before house
-        guardZoneEnd: 54, // feet from hog line - up to front of house
-        drawZoneStart: 54, // feet from hog line - front of house
-        drawZoneEnd: 78, // feet from hog line - back of house
-        takeoutZoneStart: 78, // feet from hog line - beyond house
-        takeoutZoneEnd: 126, // feet from hog line - to backline
+        hoglineToHogline: 126, // feet - distance from near hog line to far hog line
+        hoglineToBackline: 153, // feet - distance from near hog line to far back line (126 + 21 + 6)
+        hoglineToTee: 147, // feet - distance from near hog line to center of far house (tee line) (126 + 21)
+        hoglineToFrontOfHouse: 141, // feet - distance from near hog line to front of far 12-foot circle (126 + 15)
+        hoglineToBackOfHouse: 153, // feet - distance from near hog line to back of far 12-foot circle (126 + 27) - AT BACKLINE
+        guardZoneStart: 126, // feet from near hog line - guards are between far hog and front of house
+        guardZoneEnd: 141, // feet from near hog line - up to front of far house
+        drawZoneStart: 141, // feet from near hog line - front of far house
+        drawZoneEnd: 153, // feet from near hog line - back of far house (at backline)
+        takeoutZoneStart: 153, // feet from near hog line - beyond far house/backline
+        takeoutZoneEnd: 160, // feet from near hog line - slightly past backline for out-of-play
     },
 
     // Physics constants
     CONSTANTS: {
-        defaultDeceleration: 0.45, // ft/s² - calibrated for typical curling ice (3s back-to-hog lands on button)
+        defaultDeceleration: 0.18, // ft/s² - calibrated for typical curling ice (3s back-to-hog lands on button at 147ft)
         sweepingEffect: 0.05, // 5% distance increase with normal sweep
         hardSweepEffect: 0.10, // 10% distance increase with hard sweep
         // Sweep recommendation thresholds
@@ -34,7 +34,7 @@ export const Physics = {
 
     // Calibration data
     calibration: {
-        deceleration: 0.45, // Current deceleration constant (ft/s²) - calibrated for typical ice
+        deceleration: 0.18, // Current deceleration constant (ft/s²) - calibrated for typical ice
         samples: [], // Array of calibration samples: {time, distance, velocity, deceleration}
         maxSamples: 10, // Keep last 10 calibration throws
     },
@@ -152,14 +152,14 @@ export const Physics = {
     getZoneCenter(zone) {
         switch (zone) {
             case 'guard':
-                // Center of guard zone (midpoint between hogline and front of house)
-                return (this.DIMENSIONS.guardZoneStart + this.DIMENSIONS.guardZoneEnd) / 2; // ~27 feet
+                // Center of guard zone (midpoint between far hogline and front of far house)
+                return (this.DIMENSIONS.guardZoneStart + this.DIMENSIONS.guardZoneEnd) / 2; // ~133.5 feet
             case 'draw':
                 // Center of house (tee line/button)
-                return this.DIMENSIONS.hoglineToTee; // 66 feet
+                return this.DIMENSIONS.hoglineToTee; // 147 feet
             case 'takeout':
                 // Backline (perfect takeout weight)
-                return this.DIMENSIONS.takeoutZoneEnd; // 126 feet (backline)
+                return this.DIMENSIONS.hoglineToBackline; // 153 feet (backline)
             default:
                 return this.DIMENSIONS.hoglineToTee;
         }
