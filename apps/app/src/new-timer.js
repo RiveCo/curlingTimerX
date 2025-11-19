@@ -329,13 +329,6 @@ export const NewTimer = {
         this.adjustedDistance = distance;
         this.isAdjustingRock = true;
         
-        // Auto-calibrate immediately when user adjusts the rock
-        // This provides instant feedback and improves the model
-        if (this.adjustedDistance !== null && this.currentThrow.time) {
-            Physics.addCalibrationSample(this.currentThrow.time, this.adjustedDistance);
-            console.log('Auto-calibrated from adjustment:', this.currentThrow.time, 's →', this.adjustedDistance.toFixed(1), 'ft');
-        }
-        
         // Update displays
         this.updateDisplay();
         this.renderRink();
@@ -384,12 +377,9 @@ export const NewTimer = {
             this.previousThrow = { ...this.currentThrow, finalDistance };
             this.resetCalibrationSlider();
             
-            // Note: If rock was adjusted, calibration already happened in setAdjustedDistance
-            // Only show calibration slider if rock was NOT adjusted
-            if (this.adjustedDistance === null) {
-                // Will show calibration slider after this throw completes
-            } else {
-                // Already calibrated via adjustment, clear previous throw
+            // Auto-calibrate if rock was adjusted
+            if (this.adjustedDistance !== null) {
+                Physics.addCalibrationSample(this.currentThrow.time, this.adjustedDistance);
                 this.previousThrow = null;
             }
         }

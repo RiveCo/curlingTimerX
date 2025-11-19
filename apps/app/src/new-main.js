@@ -48,12 +48,12 @@ NewTimer.acceptCalibration = function(actualDistance) {
     updateCalibrationDisplay();
 };
 
-// Set up callback to update calibration display when rock position is adjusted
-// Store original setAdjustedDistance method
-const originalSetAdjustedDistance = NewTimer.setAdjustedDistance;
-NewTimer.setAdjustedDistance = function(distance) {
-    originalSetAdjustedDistance.call(this, distance);
-    // Update display after auto-calibration from adjustment
+// Set up callback to update calibration display when timer starts
+// (calibration happens at start of new throw if rock was adjusted)
+const originalStartTimer = NewTimer.startTimer;
+NewTimer.startTimer = function() {
+    originalStartTimer.call(this);
+    // Update display after timer starts (calibration may have occurred)
     updateCalibrationDisplay();
 };
 
