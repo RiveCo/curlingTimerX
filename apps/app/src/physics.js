@@ -283,17 +283,19 @@ export const Physics = {
      */
     addCalibrationSample(backToHogTime, actualFinalDistance) {
         // Validate actualFinalDistance is within reasonable bounds
-        if (actualFinalDistance <= 0 || actualFinalDistance > 150) {
-            console.warn('Invalid calibration distance:', actualFinalDistance, 'feet. Must be between 0 and 150 feet.');
+        // Allow up to back line (153ft) plus a small margin for out-of-play rocks
+        if (actualFinalDistance <= 0 || actualFinalDistance > 160) {
+            console.warn('Invalid calibration distance:', actualFinalDistance, 'feet. Must be between 0 and 160 feet.');
             return;
         }
         
         // Calculate deceleration from back-to-hog time and actual final position
         const deceleration = this.calculateDeceleration(backToHogTime, actualFinalDistance);
         
-        // Validate deceleration is reasonable (0.2 to 1.0 ft/s² for curling ice)
-        if (!isFinite(deceleration) || deceleration <= 0.2 || deceleration > 1.0) {
-            console.warn('Invalid calibration deceleration:', deceleration, 'ft/s² (expected 0.2-1.0)');
+        // Validate deceleration is reasonable (0.08 to 1.0 ft/s² for curling ice)
+        // Typical values: 0.125 ft/s² for standard ice, can range from fast (0.08) to slow (0.5+)
+        if (!isFinite(deceleration) || deceleration <= 0.08 || deceleration > 1.0) {
+            console.warn('Invalid calibration deceleration:', deceleration, 'ft/s² (expected 0.08-1.0)');
             return;
         }
         
