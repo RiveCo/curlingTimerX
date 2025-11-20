@@ -28,6 +28,9 @@ function updateCalibrationDisplay() {
     }
 }
 
+// Expose updateCalibrationDisplay globally for reset button
+window.updateCalibrationDisplay = updateCalibrationDisplay;
+
 // Initialize new timer when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

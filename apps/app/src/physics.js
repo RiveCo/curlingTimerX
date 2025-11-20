@@ -22,7 +22,7 @@ export const Physics = {
 
     // Physics constants
     CONSTANTS: {
-        defaultDeceleration: 0.18, // ft/s² - calibrated for typical curling ice (3s back-to-hog lands on button at 147ft)
+        defaultDeceleration: 0.125, // ft/s² - calibrated for typical curling ice (3.6s back-to-hog lands on button at 147ft)
         sweepingEffect: 0.05, // 5% distance increase with normal sweep
         hardSweepEffect: 0.10, // 10% distance increase with hard sweep
         // Sweep recommendation thresholds
@@ -34,7 +34,7 @@ export const Physics = {
 
     // Calibration data
     calibration: {
-        deceleration: 0.18, // Current deceleration constant (ft/s²) - calibrated for typical ice
+        deceleration: 0.125, // Current deceleration constant (ft/s²) - calibrated for typical ice
         samples: [], // Array of calibration samples: {time, distance, velocity, deceleration}
         maxSamples: 10, // Keep last 10 calibration throws
     },

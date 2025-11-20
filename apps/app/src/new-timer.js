@@ -29,6 +29,7 @@ export const NewTimer = {
     // DOM elements
     timerDisplay: null,
     startButton: null,
+    resetButton: null,
     zoneButtons: {},
     calibrationSlider: null,
     calibrationValue: null,
@@ -50,6 +51,7 @@ export const NewTimer = {
         // Get DOM elements
         this.timerDisplay = document.getElementById('new-timer-display');
         this.startButton = document.getElementById('new-start-button');
+        this.resetButton = document.getElementById('reset-calibration');
         this.zoneButtons = {
             guard: document.getElementById('zone-guard'),
             draw: document.getElementById('zone-draw'),
@@ -83,11 +85,11 @@ export const NewTimer = {
     },
 
     /**
-     * Create initial throw preview showing 3.0s throw to button
+     * Create initial throw preview showing 3.6s throw to button
      */
     createInitialThrowPreview() {
-        // Create a throw record for 3.0 seconds (typical draw weight to button)
-        const backToHogTime = 3.0; // seconds
+        // Create a throw record for 3.6 seconds (typical draw weight to button)
+        const backToHogTime = 3.6; // seconds
         const velocity = Physics.calculateVelocity(backToHogTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
@@ -154,6 +156,13 @@ export const NewTimer = {
         if (this.calibrationSlider) {
             this.calibrationSlider.addEventListener('input', (e) => {
                 this.onSliderMove(e.target.value);
+            });
+        }
+
+        // Reset button
+        if (this.resetButton) {
+            this.resetButton.addEventListener('click', () => {
+                this.resetCalibration();
             });
         }
 
@@ -823,6 +832,35 @@ export const NewTimer = {
         this.resetCalibrationSlider();
         
         console.log('Calibration accepted:', Physics.getCalibrationInfo());
+    },
+
+    /**
+     * Reset calibration to defaults
+     */
+    resetCalibration() {
+        // Reset physics calibration
+        Physics.resetCalibration();
+        
+        // Clear current and previous throws
+        this.previousThrow = null;
+        this.adjustedDistance = null;
+        this.isAdjustingRock = false;
+        
+        // Reset to initial preview state
+        this.createInitialThrowPreview();
+        
+        // Update all displays
+        this.updateDisplay();
+        this.renderRink();
+        this.updateSweepRecommendation();
+        this.updateScoreIndicator();
+        
+        // Update calibration count in main.js if possible
+        if (window.updateCalibrationDisplay) {
+            window.updateCalibrationDisplay();
+        }
+        
+        console.log('Calibration reset to defaults:', Physics.getCalibrationInfo());
     }
 };
 
