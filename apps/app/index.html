@@ -7,12 +7,44 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>Curling Timer X</title>
     <link rel="stylesheet" href="/src/new-style.css">
+    <link rel="stylesheet" href="/src/home-style.css">
 </head>
 <body>
-    <!-- New Experimental Timer Screen -->
-    <div id="new-main-screen" class="screen">
+    <!-- Home Screen (Stopwatch Style) -->
+    <div id="home-screen" class="screen" style="display: block;">
+        <header class="header home-header">
+            <h1 class="app-title">Curling Timer</h1>
+            <button id="nav-to-advanced" class="nav-button" title="Advanced View">⚙️</button>
+        </header>
+
+        <main class="home-main">
+            <!-- Vertical scale with lines -->
+            <div class="scale-container">
+                <div class="scale-line hog-line"></div>
+                <div class="scale-line front-house-line"></div>
+                <div class="scale-line back-line"></div>
+            </div>
+            
+            <!-- Draggable position indicators -->
+            <div id="home-predicted-pos" class="position-indicator predicted"></div>
+            <div id="home-swept-pos" class="position-indicator swept"></div>
+
+            <!-- Center time display -->
+            <div class="center-content">
+                <div id="home-time-display" class="home-time-display" data-zone="draw">0.000s</div>
+                <div id="home-sweep-percentage" class="sweep-percentage">0.00</div>
+            </div>
+
+            <!-- Touch area for timer control -->
+            <div id="home-timer-touch-area" class="timer-touch-area"></div>
+        </main>
+    </div>
+
+    <!-- Advanced Screen (Original Experimental Timer) -->
+    <div id="new-main-screen" class="screen" style="display: none;">
         <header class="header">
             <h1 class="app-title">Curling Predictor</h1>
+            <button id="nav-to-home" class="nav-button" title="Home View">🏠</button>
             <div id="zone-display" class="zone-display">
                 <span class="zone-icon">🎯</span>
                 <span class="zone-label">Draw</span>
@@ -86,6 +118,6 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="/src/new-main.js"></script>
+    <script type="module" src="/src/app-init.js"></script>
 </body>
 </html>

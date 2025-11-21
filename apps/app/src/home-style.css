@@ -1,0 +1,225 @@
+/**
+ * Home Screen Styles - Stopwatch Mode
+ * Discrete, primarily black design focusing on essential information
+ */
+
+/* Home Screen Layout */
+#home-screen {
+    background: #000000;
+}
+
+.home-header {
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+    padding: 4px 8px;
+}
+
+.nav-button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.nav-button:hover {
+    color: rgba(255, 255, 255, 1);
+}
+
+.home-main {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Scale Container with Lines */
+.scale-container {
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.scale-line {
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    position: relative;
+}
+
+.scale-line::after {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: -1px;
+    width: 10px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.hog-line {
+    /* Bottom line - represents hog line */
+}
+
+.front-house-line {
+    /* Middle line - front of house */
+}
+
+.back-line {
+    /* Top line - back line */
+}
+
+/* Position Indicators */
+.position-indicator {
+    position: absolute;
+    left: 20px;
+    width: 50px; /* Wider for better visibility */
+    height: 4px; /* Thicker for better visibility */
+    pointer-events: auto;
+    cursor: ns-resize;
+    transition: all 0.1s ease-out;
+    z-index: 11;
+}
+
+.position-indicator::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    top: -8px;
+    width: 80px;
+    height: 20px;
+}
+
+.position-indicator.predicted {
+    background: #22c55e; /* Green */
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+}
+
+.position-indicator.swept {
+    background: #ef4444; /* Red */
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+    left: 25px; /* Offset slightly to the right */
+}
+
+.position-indicator.dragging {
+    opacity: 0.9;
+    box-shadow: 0 0 12px currentColor;
+}
+
+/* Center Content */
+.center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 1;
+}
+
+/* Time Display */
+.home-time-display {
+    font-size: 48px;
+    font-weight: 300;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: color 0.3s, text-shadow 0.3s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.home-time-display[data-zone="guard"] {
+    color: #fbbf24; /* Yellow - Guard */
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+.home-time-display[data-zone="draw"] {
+    color: #22c55e; /* Green - Draw */
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.home-time-display[data-zone="takeout"] {
+    color: #ef4444; /* Red - Takeout */
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+/* Sweep Percentage */
+.sweep-percentage {
+    font-size: 24px;
+    font-weight: 400;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    transition: color 0.3s;
+}
+
+.sweep-percentage.good {
+    color: #22c55e; /* Green */
+}
+
+.sweep-percentage.slow {
+    color: #fbbf24; /* Yellow */
+}
+
+.sweep-percentage.fast {
+    color: #ef4444; /* Red */
+}
+
+/* Timer Touch Area */
+.timer-touch-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.timer-touch-area.active {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Running State */
+.home-main.timer-running .home-time-display {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Responsive adjustments for smaller displays */
+@media (max-height: 300px) {
+    .home-time-display {
+        font-size: 36px;
+    }
+    
+    .sweep-percentage {
+        font-size: 18px;
+    }
+    
+    .scale-container {
+        left: 15px;
+        width: 30px;
+    }
+}
