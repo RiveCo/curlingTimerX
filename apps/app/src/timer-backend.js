@@ -14,6 +14,18 @@ export const TimerBackend = {
     // Callback for timer updates (set by consumer)
     onTick: null,
     
+    // Bound tick method for animation frame
+    boundTick: null,
+    
+    /**
+     * Initialize the timer backend (called automatically on first use)
+     */
+    _init() {
+        if (!this.boundTick) {
+            this.boundTick = () => this.tick();
+        }
+    },
+    
     /**
      * Start the timer
      */
@@ -22,6 +34,7 @@ export const TimerBackend = {
             return;
         }
         
+        this._init();
         this.isRunning = true;
         this.startTime = performance.now();
         this.elapsedTime = 0;
@@ -89,7 +102,7 @@ export const TimerBackend = {
             this.onTick(this.elapsedTime / 1000);
         }
         
-        // Continue animation
-        this.animationFrameId = requestAnimationFrame(() => this.tick());
+        // Continue animation using bound method
+        this.animationFrameId = requestAnimationFrame(this.boundTick);
     }
 };
