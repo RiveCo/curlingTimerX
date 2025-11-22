@@ -462,13 +462,8 @@ export const NewTimer = {
      * Update the display with current throw information
      */
     updateDisplay() {
-        const timeInSeconds = TimerBackend.getElapsedTime().toFixed(3);
-        this.timerDisplay.textContent = `${timeInSeconds}s`;
-        
-        // Update info panel
-        if (this.infoTime) {
-            this.infoTime.textContent = `${timeInSeconds}s`;
-        }
+        // Update timer display
+        this.updateTimerDisplay(TimerBackend.getElapsedTime());
         
         if (this.currentThrow) {
             // Use adjusted distance if available
