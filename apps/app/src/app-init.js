@@ -9,6 +9,7 @@ import './home-style.css';
 
 // Import modules
 import { Physics } from './physics.js';
+import { SharedState } from './shared-state.js';
 import { NewTimer } from './new-timer.js';
 import { HomeTimer } from './home-timer.js';
 import pttHandler from './lib/ptt-handler.js';
@@ -18,6 +19,9 @@ pttHandler.init();
 
 // Initialize physics model (shared between both screens)
 Physics.init();
+
+// Initialize shared state
+SharedState.init();
 
 // Screen state
 let currentScreen = 'home'; // 'home' or 'advanced'
@@ -33,9 +37,10 @@ function switchToHome() {
     advancedScreen.style.display = 'none';
     currentScreen = 'home';
     
-    // Update home screen with current state
+    // Update home screen with current state from SharedState
     HomeTimer.updatePositions();
     HomeTimer.updateSweepPercentage();
+    HomeTimer.updateDisplay();
 }
 
 /**
@@ -49,8 +54,11 @@ function switchToAdvanced() {
     advancedScreen.style.display = 'flex';
     currentScreen = 'advanced';
     
-    // Update advanced screen rendering
+    // Update advanced screen rendering with current state from SharedState
+    NewTimer.updateDisplay();
     NewTimer.renderRink();
+    NewTimer.updateSweepRecommendation();
+    NewTimer.updateScoreIndicator();
 }
 
 /**

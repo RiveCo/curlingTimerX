@@ -5,22 +5,15 @@
 
 import { Physics } from './physics.js';
 import { TimerBackend } from './timer-backend.js';
+import { SharedState } from './shared-state.js';
 
 export const NewTimer = {
-    
-    // Throw tracking
-    currentThrow: null, // Current throw being timed
-    previousThrow: null, // Previous throw (calibration candidate)
-    
-    // Selected zone for the throw
-    selectedZone: 'draw', // 'guard', 'draw', or 'takeout'
     
     // Calibration state
     calibrationSliderMoved: false,
     
     // Rock adjustment state
     isAdjustingRock: false,
-    adjustedDistance: null, // Manually adjusted distance (overrides predicted)
     
     // DOM elements
     timerDisplay: null,
@@ -70,44 +63,59 @@ export const NewTimer = {
         TimerBackend.onTick = (elapsedSeconds) => {
             this.updateTimerDisplay(elapsedSeconds);
         };
+        
+        // Listen to shared state changes
+        SharedState.addListener((event) => {
+            this.onStateChange(event);
+        });
 
         // Set up event listeners
         this.setupEventListeners();
         
-        // Set initial zone
-        this.setZone('draw');
-        
-        // Create initial throw preview for 3.6s (button weight)
-        this.createInitialThrowPreview();
+        // Set initial zone to match shared state
+        this.setZone(SharedState.selectedZone);
         
         // Initialize display
         this.updateDisplay();
         this.renderRink();
     },
-
+    
     /**
-     * Create initial throw preview showing 3.6s throw to button
+     * Handle shared state changes
      */
-    createInitialThrowPreview() {
-        // Create a throw record for 3.6 seconds (typical draw weight to button)
-        const backToHogTime = 3.6; // seconds
-        const velocity = Physics.calculateVelocity(backToHogTime);
-        const predictedDistance = Physics.predictDistance(velocity);
-        const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
-        const zone = Physics.classifyZone(predictedDistance);
-        const sweepRec = Physics.getSweepRecommendation(predictedDistance, this.selectedZone);
-        const willScore = Physics.willScore(predictedDistance);
-        
-        this.currentThrow = {
-            time: backToHogTime,
-            velocity: velocity,
-            predictedDistance: predictedDistance,
-            sweptDistance: sweptDistance,
-            zone: zone,
-            sweepRecommendation: sweepRec,
-            willScore: willScore,
-            intendedZone: this.selectedZone
-        };
+    onStateChange(event) {
+        switch (event) {
+            case 'throwRecorded':
+            case 'throwUpdated':
+            case 'positionAdjusted':
+            case 'reset':
+            case 'calibrationReset':
+                this.updateDisplay();
+                this.renderRink();
+                this.updateSweepRecommendation();
+                this.updateScoreIndicator();
+                this.isAdjustingRock = false;
+                break;
+            case 'zoneChanged':
+                this.updateZoneButtons();
+                this.updateZoneDisplay();
+                this.updateDisplay();
+                this.renderRink();
+                break;
+        }
+    },
+    
+    /**
+     * Update zone buttons to match shared state
+     */
+    updateZoneButtons() {
+        Object.keys(this.zoneButtons).forEach(key => {
+            if (key === SharedState.selectedZone) {
+                this.zoneButtons[key].classList.add('active');
+            } else {
+                this.zoneButtons[key].classList.remove('active');
+            }
+        });
     },
 
     /**
@@ -166,13 +174,13 @@ export const NewTimer = {
 
         // Rabbit R1 scroll wheel support for rock adjustment
         window.addEventListener('scrollUp', () => {
-            if (this.currentThrow && !TimerBackend.isRunning) {
+            if (SharedState.currentThrow && !TimerBackend.isRunning) {
                 this.adjustRockPosition(1); // Move rock up (further)
             }
         });
         
         window.addEventListener('scrollDown', () => {
-            if (this.currentThrow && !TimerBackend.isRunning) {
+            if (SharedState.currentThrow && !TimerBackend.isRunning) {
                 this.adjustRockPosition(-1); // Move rock down (shorter)
             }
         });
@@ -184,7 +192,7 @@ export const NewTimer = {
         window.addEventListener('sideClick', () => {
             if (TimerBackend.isRunning) {
                 this.stopTimer();
-            } else if (this.previousThrow && !this.calibrationSliderMoved) {
+            } else if (SharedState.previousThrow && !this.calibrationSliderMoved) {
                 // If there's a calibration candidate and slider hasn't been moved,
                 // physical button accepts calibration at current slider position
                 this.acceptCalibration();
@@ -220,13 +228,13 @@ export const NewTimer = {
         let dragStartDistance = 0;
         
         const onDragStart = (clientY) => {
-            if (!this.currentThrow || TimerBackend.isRunning) return false;
+            if (!SharedState.currentThrow || TimerBackend.isRunning) return false;
             
             // Allow drag from anywhere on the canvas
             isDragging = true;
             const rect = this.rinkCanvas.getBoundingClientRect();
             dragStartY = clientY - rect.top;
-            dragStartDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+            dragStartDistance = SharedState.getPredictedDistance();
             this.isAdjustingRock = true;
             return true;
         };
@@ -309,9 +317,9 @@ export const NewTimer = {
      * @param {number} direction - 1 for up/further, -1 for down/shorter
      */
     adjustRockPosition(direction) {
-        if (!this.currentThrow) return;
+        if (!SharedState.currentThrow) return;
         
-        const currentDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+        const currentDistance = SharedState.getPredictedDistance();
         const adjustment = direction * 2; // 2 feet per scroll
         const newDistance = Math.max(0, Math.min(Physics.DIMENSIONS.hoglineToBackline, currentDistance + adjustment));
         
@@ -323,14 +331,10 @@ export const NewTimer = {
      * @param {number} distance - New distance in feet
      */
     setAdjustedDistance(distance) {
-        if (!this.currentThrow) return;
+        if (!SharedState.currentThrow) return;
         
-        this.adjustedDistance = distance;
+        SharedState.setAdjustedPredictedDistance(distance);
         this.isAdjustingRock = true;
-        
-        // Update displays
-        this.updateDisplay();
-        this.renderRink();
     },
 
     /**
@@ -342,23 +346,7 @@ export const NewTimer = {
             return;
         }
         
-        this.selectedZone = zone;
-        
-        // Update button states
-        Object.keys(this.zoneButtons).forEach(key => {
-            if (key === zone) {
-                this.zoneButtons[key].classList.add('active');
-            } else {
-                this.zoneButtons[key].classList.remove('active');
-            }
-        });
-        
-        // Update display
-        this.updateZoneDisplay();
-        if (this.currentThrow) {
-            this.renderRink();
-            this.updateDisplay(); // Update distance description
-        }
+        SharedState.setZone(zone);
     },
 
     /**
@@ -369,25 +357,14 @@ export const NewTimer = {
             return;
         }
         
-        // If there's a previous throw that wasn't calibrated, make it the candidate
-        if (this.currentThrow && !this.calibrationSliderMoved) {
-            // Use adjusted distance for calibration if it was adjusted
-            const finalDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
-            this.previousThrow = { ...this.currentThrow, finalDistance };
+        // Previous throw handling is now managed by SharedState when recording new throws
+        if (SharedState.previousThrow && !this.calibrationSliderMoved) {
             this.resetCalibrationSlider();
-            
-            // Auto-calibrate if rock was adjusted
-            if (this.adjustedDistance !== null) {
-                Physics.addCalibrationSample(this.currentThrow.time, this.adjustedDistance);
-                this.previousThrow = null;
-            }
         }
         
         TimerBackend.start();
         
-        // Clear current throw and adjusted distance
-        this.currentThrow = null;
-        this.adjustedDistance = null;
+        // Reset adjustment state
         this.isAdjustingRock = false;
         
         // Add active state to button
@@ -407,7 +384,6 @@ export const NewTimer = {
         // Remove active state from button
         this.startButton.classList.remove('active');
         
-        // Create throw record only if we have a valid time
         // Validate minimum time (lowered to 1.0 second for fast takeout shots)
         if (backToHogTime < 1.0) {
             console.log('Timer stopped too quickly - throw ignored (min 1.0s)');
@@ -415,32 +391,11 @@ export const NewTimer = {
             return;
         }
         
-        const velocity = Physics.calculateVelocity(backToHogTime);
-        const predictedDistance = Physics.predictDistance(velocity);
-        const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
-        const zone = Physics.classifyZone(predictedDistance);
-        const sweepRec = Physics.getSweepRecommendation(predictedDistance, this.selectedZone);
-        const willScore = Physics.willScore(predictedDistance);
-        
-        this.currentThrow = {
-            time: backToHogTime,
-            velocity: velocity,
-            predictedDistance: predictedDistance,
-            sweptDistance: sweptDistance,
-            zone: zone,
-            sweepRecommendation: sweepRec,
-            willScore: willScore,
-            intendedZone: this.selectedZone
-        };
-        
-        // Update displays
-        this.updateDisplay();
-        this.renderRink();
-        this.updateSweepRecommendation();
-        this.updateScoreIndicator();
+        // Record throw in shared state
+        SharedState.recordThrow(backToHogTime);
         
         // Show calibration slider if there's a previous throw
-        if (this.previousThrow) {
+        if (SharedState.previousThrow) {
             this.showCalibrationSlider();
         }
     },
@@ -465,23 +420,23 @@ export const NewTimer = {
         // Update timer display
         this.updateTimerDisplay(TimerBackend.getElapsedTime());
         
-        if (this.currentThrow) {
-            // Use adjusted distance if available
-            const displayDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
+        if (SharedState.currentThrow) {
+            // Use distance from shared state
+            const displayDistance = SharedState.getPredictedDistance();
             
             if (this.infoZone) {
                 const zoneNames = { guard: 'Guard', draw: 'Draw', takeout: 'Takeout' };
-                this.infoZone.textContent = zoneNames[this.currentThrow.zone] || '-';
+                this.infoZone.textContent = zoneNames[SharedState.currentThrow.zone] || '-';
             }
             if (this.infoDistance) {
                 // Use new distance description format
-                const description = Physics.getDistanceDescription(displayDistance, this.selectedZone);
+                const description = Physics.getDistanceDescription(displayDistance, SharedState.selectedZone);
                 this.infoDistance.textContent = description;
             }
             if (this.infoSwept) {
                 // Calculate swept distance based on current position
-                const sweptDist = Physics.predictSweptDistance(displayDistance, 'normal');
-                const sweptDescription = Physics.getDistanceDescription(sweptDist, this.selectedZone);
+                const sweptDist = SharedState.getSweptDistance();
+                const sweptDescription = Physics.getDistanceDescription(sweptDist, SharedState.selectedZone);
                 this.infoSwept.textContent = sweptDescription;
             }
         } else {
@@ -508,8 +463,8 @@ export const NewTimer = {
         };
         
         this.zoneDisplay.innerHTML = `
-            <span class="zone-icon">${icons[this.selectedZone]}</span>
-            <span class="zone-label">${labels[this.selectedZone]}</span>
+            <span class="zone-icon">${icons[SharedState.selectedZone]}</span>
+            <span class="zone-label">${labels[SharedState.selectedZone]}</span>
         `;
     },
 
@@ -517,13 +472,13 @@ export const NewTimer = {
      * Update sweep recommendation display
      */
     updateSweepRecommendation() {
-        if (!this.currentThrow) {
+        if (!SharedState.currentThrow) {
             this.sweepRecommendation.textContent = '';
             this.sweepRecommendation.className = 'sweep-recommendation';
             return;
         }
         
-        const rec = this.currentThrow.sweepRecommendation;
+        const rec = SharedState.currentThrow.sweepRecommendation;
         const texts = {
             'hard_sweep': 'Hard Sweep!',
             'sweep': 'Sweep',
@@ -539,13 +494,13 @@ export const NewTimer = {
      * Update score indicator display
      */
     updateScoreIndicator() {
-        if (!this.currentThrow) {
+        if (!SharedState.currentThrow) {
             this.scoreIndicator.textContent = '';
             this.scoreIndicator.className = 'score-indicator';
             return;
         }
         
-        if (this.currentThrow.willScore) {
+        if (SharedState.currentThrow.willScore) {
             this.scoreIndicator.textContent = '✓ Score';
             this.scoreIndicator.className = 'score-indicator will-score';
         } else {
@@ -685,10 +640,10 @@ export const NewTimer = {
         ctx.fill();
         
         // Draw predicted positions if we have a current throw
-        if (this.currentThrow) {
-            // Use adjusted distance if available
-            const displayDistance = this.adjustedDistance !== null ? this.adjustedDistance : this.currentThrow.predictedDistance;
-            const sweptDistance = Physics.predictSweptDistance(displayDistance, 'normal');
+        if (SharedState.currentThrow) {
+            // Use distance from shared state
+            const displayDistance = SharedState.getPredictedDistance();
+            const sweptDistance = SharedState.getSweptDistance();
             
             // Calculate Y positions using distanceToY function
             const predictedY = distanceToY(displayDistance);
@@ -758,13 +713,13 @@ export const NewTimer = {
      * @param {number} value - Slider value (0-100)
      */
     onSliderMove(value) {
-        if (!this.previousThrow) return;
+        if (!SharedState.previousThrow) return;
         
         this.calibrationSliderMoved = true;
         
         // Convert slider value (0-100) to distance adjustment
         // Use percentage-based range for better handling of uncalibrated initial predictions
-        const predictedDist = this.previousThrow.predictedDistance;
+        const predictedDist = SharedState.previousThrow.predictedDistance;
         
         // Use percentage-based range: ±50% of predicted distance, minimum ±30 feet
         const rangePercent = 0.5; // ±50%
@@ -786,12 +741,12 @@ export const NewTimer = {
      * @param {number} actualDistance - Actual final distance, optional (calculated from slider if not provided)
      */
     acceptCalibration(actualDistance = null) {
-        if (!this.previousThrow) return;
+        if (!SharedState.previousThrow) return;
         
         // If no distance provided, calculate from slider
         if (actualDistance === null) {
             const sliderValue = parseFloat(this.calibrationSlider.value);
-            const predictedDist = this.previousThrow.predictedDistance;
+            const predictedDist = SharedState.previousThrow.predictedDistance;
             
             // Use same percentage-based range as onSliderMove
             const rangePercent = 0.5;
@@ -803,10 +758,10 @@ export const NewTimer = {
         }
         
         // Add calibration sample to physics model
-        Physics.addCalibrationSample(this.previousThrow.time, actualDistance);
+        Physics.addCalibrationSample(SharedState.previousThrow.time, actualDistance);
         
         // Clear previous throw and reset slider
-        this.previousThrow = null;
+        SharedState.previousThrow = null;
         this.resetCalibrationSlider();
         
         console.log('Calibration accepted:', Physics.getCalibrationInfo());
@@ -816,22 +771,10 @@ export const NewTimer = {
      * Reset calibration to defaults
      */
     resetCalibration() {
-        // Reset physics calibration
-        Physics.resetCalibration();
+        SharedState.resetCalibration();
         
-        // Clear current and previous throws
-        this.previousThrow = null;
-        this.adjustedDistance = null;
+        // Reset local state
         this.isAdjustingRock = false;
-        
-        // Reset to initial preview state
-        this.createInitialThrowPreview();
-        
-        // Update all displays
-        this.updateDisplay();
-        this.renderRink();
-        this.updateSweepRecommendation();
-        this.updateScoreIndicator();
         
         // Update calibration count in main.js if possible
         if (window.updateCalibrationDisplay) {
