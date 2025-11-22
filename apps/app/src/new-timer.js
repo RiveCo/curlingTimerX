@@ -357,7 +357,7 @@ export const NewTimer = {
             return;
         }
         
-        // Store previous throw info for calibration (handled by SharedState now)
+        // Previous throw handling is now managed by SharedState when recording new throws
         if (SharedState.previousThrow && !this.calibrationSliderMoved) {
             this.resetCalibrationSlider();
         }

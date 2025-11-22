@@ -7,6 +7,9 @@
 import { Physics } from './physics.js';
 
 export const SharedState = {
+    // Constants
+    DEFAULT_BUTTON_WEIGHT_TIME: 3.6, // Typical draw weight time to button (seconds)
+    
     // Current throw data (shared between both screens)
     currentThrow: null, // Current throw being displayed
     
@@ -32,10 +35,10 @@ export const SharedState = {
     },
     
     /**
-     * Create initial throw preview showing 3.6s throw to button
+     * Create initial throw preview showing default button weight throw
      */
     createInitialThrowPreview() {
-        const backToHogTime = 3.6; // seconds
+        const backToHogTime = this.DEFAULT_BUTTON_WEIGHT_TIME;
         const velocity = Physics.calculateVelocity(backToHogTime);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
@@ -161,10 +164,6 @@ export const SharedState = {
             // Auto-calibrate if position was manually adjusted
             if (this.adjustedPredictedDistance !== null) {
                 Physics.addCalibrationSample(this.currentThrow.time, finalPredictedDistance);
-                console.log('Auto-calibration from manual adjustment:', {
-                    time: this.currentThrow.time,
-                    distance: finalPredictedDistance
-                });
                 this.previousThrow = null; // Clear since we auto-calibrated
             }
         }
@@ -201,11 +200,6 @@ export const SharedState = {
     addCalibration() {
         if (this.currentThrow && this.adjustedPredictedDistance !== null) {
             Physics.addCalibrationSample(this.currentThrow.time, this.adjustedPredictedDistance);
-            console.log('Calibration added:', {
-                time: this.currentThrow.time,
-                distance: this.adjustedPredictedDistance,
-                samples: Physics.getCalibrationInfo().sampleCount
-            });
             this.notifyListeners('calibrationAdded');
         }
     },
