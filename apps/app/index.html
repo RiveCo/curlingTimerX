@@ -13,8 +13,14 @@
     <!-- Home Screen (Stopwatch Style) -->
     <div id="home-screen" class="screen" style="display: block;">
         <header class="header home-header">
-            <h1 class="app-title">Curling Timer</h1>
-            <button id="nav-to-advanced" class="nav-button" title="Advanced View">⚙️</button>
+            <h1 class="app-title">Stop Watch</h1>
+            <div class="home-header-right">
+                <div class="home-samples-info">
+                    <span id="home-cal-samples">0</span> samples
+                </div>
+                <button id="home-reset-calibration" class="home-reset-button" title="Reset calibration to defaults">Reset</button>
+                <button id="nav-to-advanced" class="nav-button" title="Advanced View">⚙️</button>
+            </div>
         </header>
 
         <main class="home-main">
