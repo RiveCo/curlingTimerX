@@ -5,18 +5,9 @@
 
 import { Physics } from './physics.js';
 import { TimerBackend } from './timer-backend.js';
+import { SharedState } from './shared-state.js';
 
 export const HomeTimer = {
-    
-    // Throw tracking
-    currentThrow: null,
-    
-    // Selected zone (guard, draw, takeout)
-    selectedZone: 'draw',
-    
-    // Position state (in feet from near hog line)
-    predictedPosition: 147, // Default to button (draw)
-    sweptPosition: 154, // Default with sweeping effect
     
     // Dragging state
     isDraggingPredicted: false,
@@ -59,12 +50,37 @@ export const HomeTimer = {
             this.updateDisplay(elapsedSeconds);
         };
         
+        // Listen to shared state changes
+        SharedState.addListener((event) => {
+            this.onStateChange(event);
+        });
+        
         // Set up event listeners
         this.setupEventListeners();
         
-        // Initialize positions
+        // Initialize display from shared state
         this.updatePositions();
         this.updateDisplay();
+    },
+    
+    /**
+     * Handle shared state changes
+     */
+    onStateChange(event) {
+        switch (event) {
+            case 'throwRecorded':
+            case 'throwUpdated':
+            case 'positionAdjusted':
+            case 'reset':
+                this.updatePositions();
+                this.updateSweepPercentage();
+                this.updateDisplay();
+                break;
+            case 'zoneChanged':
+                this.timeDisplay.setAttribute('data-zone', SharedState.selectedZone);
+                this.updateSweepPercentage();
+                break;
+        }
     },
 
     /**
@@ -125,7 +141,7 @@ export const HomeTimer = {
             if (TimerBackend.isRunning) return false;
             this.isDraggingPredicted = true;
             this.dragStartY = clientY;
-            this.dragStartPosition = this.predictedPosition;
+            this.dragStartPosition = SharedState.getPredictedDistance();
             this.predictedPosElement.classList.add('dragging');
             return true;
         };
@@ -200,7 +216,7 @@ export const HomeTimer = {
             if (TimerBackend.isRunning) return false;
             this.isDraggingSwept = true;
             this.dragStartY = clientY;
-            this.dragStartPosition = this.sweptPosition;
+            this.dragStartPosition = SharedState.getSweptDistance();
             this.sweptPosElement.classList.add('dragging');
             return true;
         };
@@ -276,48 +292,39 @@ export const HomeTimer = {
      */
     cycleZone() {
         const zones = ['guard', 'draw', 'takeout'];
-        const currentIndex = zones.indexOf(this.selectedZone);
+        const currentIndex = zones.indexOf(SharedState.selectedZone);
         const nextIndex = (currentIndex + 1) % zones.length;
-        this.selectedZone = zones[nextIndex];
-        
-        // Update time display zone
-        this.timeDisplay.setAttribute('data-zone', this.selectedZone);
-        
-        // Update sweep percentage display
-        this.updateSweepPercentage();
+        SharedState.setZone(zones[nextIndex]);
     },
 
     /**
      * Set predicted position and update swept position
      */
     setPredictedPosition(position) {
-        this.predictedPosition = position;
-        // Update swept position based on predicted
-        this.sweptPosition = Physics.predictSweptDistance(position, 'normal');
-        this.updatePositions();
-        this.updateSweepPercentage();
+        SharedState.setAdjustedPredictedDistance(position);
     },
 
     /**
      * Set swept position independently
      */
     setSweptPosition(position) {
-        this.sweptPosition = position;
-        this.updatePositions();
-        this.updateSweepPercentage();
+        SharedState.setAdjustedSweptDistance(position);
     },
 
     /**
      * Update visual positions of indicators
      */
     updatePositions() {
+        const predictedPosition = SharedState.getPredictedDistance();
+        const sweptPosition = SharedState.getSweptDistance();
+        
         const scale = this.mainElement.offsetHeight / this.SCALE_CONFIG.viewportRange;
         
         // Calculate Y positions (inverted - 0 at top)
         const predictedY = this.mainElement.offsetHeight - 
-            (this.predictedPosition - this.SCALE_CONFIG.bottomPosition) * scale;
+            (predictedPosition - this.SCALE_CONFIG.bottomPosition) * scale;
         const sweptY = this.mainElement.offsetHeight - 
-            (this.sweptPosition - this.SCALE_CONFIG.bottomPosition) * scale;
+            (sweptPosition - this.SCALE_CONFIG.bottomPosition) * scale;
         
         this.predictedPosElement.style.top = `${predictedY}px`;
         this.sweptPosElement.style.top = `${sweptY}px`;
@@ -327,18 +334,21 @@ export const HomeTimer = {
      * Update sweep percentage display
      */
     updateSweepPercentage() {
-        if (!this.currentThrow && !this.isDraggingPredicted && !this.isDraggingSwept) {
+        const predictedPosition = SharedState.getPredictedDistance();
+        const sweptPosition = SharedState.getSweptDistance();
+        
+        if (!SharedState.currentThrow && !this.isDraggingPredicted && !this.isDraggingSwept) {
             // Before any throw, show preview based on current positions
-            const sweepDistance = this.sweptPosition - this.predictedPosition;
-            const totalDistance = this.predictedPosition;
+            const sweepDistance = sweptPosition - predictedPosition;
+            const totalDistance = predictedPosition;
             const sweepPercentage = totalDistance > 0 ? sweepDistance / totalDistance : 0;
             this.sweepPercentage.textContent = Math.max(0, Math.min(1, sweepPercentage)).toFixed(2);
             
             // Set color based on zone
             const targetDistance = this.getTargetDistance();
-            if (Math.abs(this.predictedPosition - targetDistance) <= 3) {
+            if (Math.abs(predictedPosition - targetDistance) <= 3) {
                 this.sweepPercentage.className = 'sweep-percentage good';
-            } else if (this.predictedPosition < targetDistance) {
+            } else if (predictedPosition < targetDistance) {
                 this.sweepPercentage.className = 'sweep-percentage slow';
             } else {
                 this.sweepPercentage.className = 'sweep-percentage fast';
@@ -346,13 +356,12 @@ export const HomeTimer = {
             return;
         }
         
-        if (this.currentThrow) {
-            const actualDistance = this.predictedPosition;
+        if (SharedState.currentThrow) {
+            const actualDistance = predictedPosition;
             const targetDistance = this.getTargetDistance();
-            const sweepRec = Physics.getSweepRecommendation(actualDistance, this.selectedZone);
             
             // Calculate sweep percentage (0-1)
-            const sweepDistance = this.sweptPosition - actualDistance;
+            const sweepDistance = sweptPosition - actualDistance;
             const sweepPercentage = actualDistance > 0 ? sweepDistance / actualDistance : 0;
             this.sweepPercentage.textContent = Math.max(0, Math.min(1, sweepPercentage)).toFixed(2);
             
@@ -372,7 +381,7 @@ export const HomeTimer = {
      * Get target distance for current zone
      */
     getTargetDistance() {
-        switch (this.selectedZone) {
+        switch (SharedState.selectedZone) {
             case 'guard':
                 return (Physics.DIMENSIONS.guardZoneStart + Physics.DIMENSIONS.guardZoneEnd) / 2; // ~133.5ft
             case 'draw':
@@ -388,15 +397,9 @@ export const HomeTimer = {
      * Called when positions are manually adjusted (calibration)
      */
     onPositionAdjusted() {
-        // If we have a current throw and positions were adjusted, it's a calibration opportunity
-        if (this.currentThrow && this.currentThrow.time > 0) {
-            const calibratedDistance = this.predictedPosition;
-            Physics.addCalibrationSample(this.currentThrow.time, calibratedDistance);
-            console.log('Calibration added:', {
-                time: this.currentThrow.time,
-                distance: calibratedDistance,
-                samples: Physics.getCalibrationInfo().sampleCount
-            });
+        // If we have a current throw and positions were adjusted, add calibration
+        if (SharedState.currentThrow && SharedState.currentThrow.time > 0) {
+            SharedState.addCalibration();
         }
     },
 
@@ -421,26 +424,8 @@ export const HomeTimer = {
         this.mainElement.classList.remove('timer-running');
         this.touchArea.classList.remove('active');
         
-        // Calculate final throw
-        const velocity = Physics.calculateVelocity(time);
-        const predictedDistance = Physics.predictDistance(velocity);
-        const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
-        
-        // Store throw
-        this.currentThrow = {
-            time: time,
-            velocity: velocity,
-            predictedDistance: predictedDistance,
-            sweptDistance: sweptDistance,
-            zone: Physics.classifyZone(predictedDistance),
-            intendedZone: this.selectedZone
-        };
-        
-        // Update positions based on prediction
-        this.predictedPosition = predictedDistance;
-        this.sweptPosition = sweptDistance;
-        this.updatePositions();
-        this.updateSweepPercentage();
+        // Record throw in shared state
+        SharedState.recordThrow(time);
     },
 
     /**
@@ -458,16 +443,11 @@ export const HomeTimer = {
      */
     reset() {
         TimerBackend.reset();
-        this.currentThrow = null;
+        SharedState.reset();
         
         this.mainElement.classList.remove('timer-running');
         this.touchArea.classList.remove('active');
         
-        // Reset to default positions
-        this.predictedPosition = 147; // Button
-        this.sweptPosition = 154; // With sweep
-        this.updatePositions();
         this.updateDisplay();
-        this.updateSweepPercentage();
     }
 };
