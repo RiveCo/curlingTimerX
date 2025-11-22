@@ -4,13 +4,9 @@
  */
 
 import { Physics } from './physics.js';
+import { TimerBackend } from './timer-backend.js';
 
 export const HomeTimer = {
-    // Timer state
-    isRunning: false,
-    startTime: null,
-    elapsedTime: 0,
-    animationFrameId: null,
     
     // Throw tracking
     currentThrow: null,
@@ -57,6 +53,11 @@ export const HomeTimer = {
         this.predictedPosElement = document.getElementById('home-predicted-pos');
         this.sweptPosElement = document.getElementById('home-swept-pos');
         this.mainElement = this.homeScreen.querySelector('.home-main');
+        
+        // Set up timer backend callback
+        TimerBackend.onTick = (elapsedSeconds) => {
+            this.updateDisplay(elapsedSeconds);
+        };
         
         // Set up event listeners
         this.setupEventListeners();
@@ -121,7 +122,7 @@ export const HomeTimer = {
     setupPositionDragging() {
         // Predicted position dragging
         const onPredictedDragStart = (clientY) => {
-            if (this.isRunning) return false;
+            if (TimerBackend.isRunning) return false;
             this.isDraggingPredicted = true;
             this.dragStartY = clientY;
             this.dragStartPosition = this.predictedPosition;
@@ -196,7 +197,7 @@ export const HomeTimer = {
         
         // Swept position dragging
         const onSweptDragStart = (clientY) => {
-            if (this.isRunning) return false;
+            if (TimerBackend.isRunning) return false;
             this.isDraggingSwept = true;
             this.dragStartY = clientY;
             this.dragStartPosition = this.sweptPosition;
@@ -403,33 +404,24 @@ export const HomeTimer = {
      * Start the timer
      */
     startTimer() {
-        if (this.isRunning) return;
+        if (TimerBackend.isRunning) return;
         
-        this.isRunning = true;
-        this.startTime = performance.now();
+        TimerBackend.start();
         this.mainElement.classList.add('timer-running');
         this.touchArea.classList.add('active');
-        
-        this.updateTimerDisplay();
     },
 
     /**
      * Stop the timer
      */
     stopTimer() {
-        if (!this.isRunning) return;
+        if (!TimerBackend.isRunning) return;
         
-        this.isRunning = false;
+        const time = TimerBackend.stop();
         this.mainElement.classList.remove('timer-running');
         this.touchArea.classList.remove('active');
         
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
-        
         // Calculate final throw
-        const time = this.elapsedTime / 1000; // Convert to seconds
         const velocity = Physics.calculateVelocity(time);
         const predictedDistance = Physics.predictDistance(velocity);
         const sweptDistance = Physics.predictSweptDistance(predictedDistance, 'normal');
@@ -452,41 +444,21 @@ export const HomeTimer = {
     },
 
     /**
-     * Update timer display (animation loop)
-     */
-    updateTimerDisplay() {
-        if (!this.isRunning) return;
-        
-        const currentTime = performance.now();
-        this.elapsedTime = currentTime - this.startTime;
-        
-        // Update display
-        this.updateDisplay();
-        
-        // Continue animation
-        this.animationFrameId = requestAnimationFrame(() => this.updateTimerDisplay());
-    },
-
-    /**
      * Update all display elements
      */
-    updateDisplay() {
-        const seconds = this.elapsedTime / 1000;
-        this.timeDisplay.textContent = seconds.toFixed(3) + 's';
+    updateDisplay(elapsedSeconds) {
+        if (elapsedSeconds === undefined) {
+            elapsedSeconds = TimerBackend.getElapsedTime();
+        }
+        this.timeDisplay.textContent = elapsedSeconds.toFixed(3) + 's';
     },
 
     /**
      * Reset timer for new throw
      */
     reset() {
-        this.isRunning = false;
-        this.elapsedTime = 0;
+        TimerBackend.reset();
         this.currentThrow = null;
-        
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
         
         this.mainElement.classList.remove('timer-running');
         this.touchArea.classList.remove('active');

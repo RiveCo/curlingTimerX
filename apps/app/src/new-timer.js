@@ -4,13 +4,9 @@
  */
 
 import { Physics } from './physics.js';
+import { TimerBackend } from './timer-backend.js';
 
 export const NewTimer = {
-    // Timer state
-    isRunning: false,
-    startTime: null,
-    elapsedTime: 0,
-    animationFrameId: null,
     
     // Throw tracking
     currentThrow: null, // Current throw being timed
@@ -70,6 +66,11 @@ export const NewTimer = {
         this.infoDistance = document.getElementById('info-distance');
         this.infoSwept = document.getElementById('info-swept');
 
+        // Set up timer backend callback
+        TimerBackend.onTick = (elapsedSeconds) => {
+            this.updateTimerDisplay(elapsedSeconds);
+        };
+
         // Set up event listeners
         this.setupEventListeners();
         
@@ -107,9 +108,6 @@ export const NewTimer = {
             willScore: willScore,
             intendedZone: this.selectedZone
         };
-        
-        // Set elapsed time to match the preview
-        this.elapsedTime = backToHogTime * 1000; // Convert to milliseconds
     },
 
     /**
@@ -168,13 +166,13 @@ export const NewTimer = {
 
         // Rabbit R1 scroll wheel support for rock adjustment
         window.addEventListener('scrollUp', () => {
-            if (this.currentThrow && !this.isRunning) {
+            if (this.currentThrow && !TimerBackend.isRunning) {
                 this.adjustRockPosition(1); // Move rock up (further)
             }
         });
         
         window.addEventListener('scrollDown', () => {
-            if (this.currentThrow && !this.isRunning) {
+            if (this.currentThrow && !TimerBackend.isRunning) {
                 this.adjustRockPosition(-1); // Move rock down (shorter)
             }
         });
@@ -184,7 +182,7 @@ export const NewTimer = {
 
         // Rabbit R1 side button support
         window.addEventListener('sideClick', () => {
-            if (this.isRunning) {
+            if (TimerBackend.isRunning) {
                 this.stopTimer();
             } else if (this.previousThrow && !this.calibrationSliderMoved) {
                 // If there's a calibration candidate and slider hasn't been moved,
@@ -222,7 +220,7 @@ export const NewTimer = {
         let dragStartDistance = 0;
         
         const onDragStart = (clientY) => {
-            if (!this.currentThrow || this.isRunning) return false;
+            if (!this.currentThrow || TimerBackend.isRunning) return false;
             
             // Allow drag from anywhere on the canvas
             isDragging = true;
@@ -367,7 +365,7 @@ export const NewTimer = {
      * Start the timer
      */
     startTimer() {
-        if (this.isRunning) {
+        if (TimerBackend.isRunning) {
             return;
         }
         
@@ -385,9 +383,7 @@ export const NewTimer = {
             }
         }
         
-        this.isRunning = true;
-        this.startTime = performance.now();
-        this.elapsedTime = 0;
+        TimerBackend.start();
         
         // Clear current throw and adjusted distance
         this.currentThrow = null;
@@ -396,33 +392,22 @@ export const NewTimer = {
         
         // Add active state to button
         this.startButton.classList.add('active');
-        
-        // Start animation loop
-        this.updateTimer();
     },
 
     /**
      * Stop the timer
      */
     stopTimer() {
-        if (!this.isRunning) {
+        if (!TimerBackend.isRunning) {
             return;
         }
         
-        this.isRunning = false;
-        
-        // Cancel animation frame
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
+        const backToHogTime = TimerBackend.stop();
         
         // Remove active state from button
         this.startButton.classList.remove('active');
         
         // Create throw record only if we have a valid time
-        const backToHogTime = this.elapsedTime / 1000; // Convert to seconds
-        
         // Validate minimum time (lowered to 1.0 second for fast takeout shots)
         if (backToHogTime < 1.0) {
             console.log('Timer stopped too quickly - throw ignored (min 1.0s)');
@@ -461,25 +446,23 @@ export const NewTimer = {
     },
 
     /**
-     * Update timer display (called on each animation frame)
+     * Update timer display (called on each animation frame by TimerBackend)
      */
-    updateTimer() {
-        if (!this.isRunning) {
-            return;
+    updateTimerDisplay(elapsedSeconds) {
+        const timeInSeconds = elapsedSeconds.toFixed(3);
+        this.timerDisplay.textContent = `${timeInSeconds}s`;
+        
+        // Update info panel
+        if (this.infoTime) {
+            this.infoTime.textContent = `${timeInSeconds}s`;
         }
-        
-        this.elapsedTime = performance.now() - this.startTime;
-        this.updateDisplay();
-        
-        // Continue animation loop
-        this.animationFrameId = requestAnimationFrame(() => this.updateTimer());
     },
 
     /**
-     * Update the timer display
+     * Update the display with current throw information
      */
     updateDisplay() {
-        const timeInSeconds = (this.elapsedTime / 1000).toFixed(3);
+        const timeInSeconds = TimerBackend.getElapsedTime().toFixed(3);
         this.timerDisplay.textContent = `${timeInSeconds}s`;
         
         // Update info panel
