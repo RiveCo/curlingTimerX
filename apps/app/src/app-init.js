@@ -111,6 +111,7 @@ const originalAcceptCalibration = NewTimer.acceptCalibration;
 NewTimer.acceptCalibration = function(actualDistance) {
     originalAcceptCalibration.call(this, actualDistance);
     updateCalibrationDisplay();
+    HomeTimer.updateCalibrationDisplay();
 };
 
 // Set up callback to update calibration display when timer starts
@@ -119,6 +120,14 @@ NewTimer.startTimer = function() {
     originalStartTimer.call(this);
     updateCalibrationDisplay();
 };
+
+// Set up callback to update home calibration display when SharedState reports calibration changes
+SharedState.addListener((event) => {
+    if (event === 'calibrationAdded' || event === 'calibrationReset') {
+        updateCalibrationDisplay();
+        HomeTimer.updateCalibrationDisplay();
+    }
+});
 
 console.log('Curling Timer X initialized');
 console.log('Calibration:', Physics.getCalibrationInfo());

@@ -23,6 +23,8 @@ export const HomeTimer = {
     predictedPosElement: null,
     sweptPosElement: null,
     mainElement: null,
+    calSamplesElement: null,
+    resetButton: null,
     
     // Scale configuration
     SCALE_CONFIG: {
@@ -44,6 +46,8 @@ export const HomeTimer = {
         this.predictedPosElement = document.getElementById('home-predicted-pos');
         this.sweptPosElement = document.getElementById('home-swept-pos');
         this.mainElement = this.homeScreen.querySelector('.home-main');
+        this.calSamplesElement = document.getElementById('home-cal-samples');
+        this.resetButton = document.getElementById('home-reset-calibration');
         
         // Set up timer backend callback
         TimerBackend.onTick = (elapsedSeconds) => {
@@ -61,6 +65,7 @@ export const HomeTimer = {
         // Initialize display from shared state
         this.updatePositions();
         this.updateDisplay();
+        this.updateCalibrationDisplay();
     },
     
     /**
@@ -76,6 +81,10 @@ export const HomeTimer = {
                 this.updateSweepPercentage();
                 this.updateDisplay();
                 break;
+            case 'calibrationAdded':
+            case 'calibrationReset':
+                this.updateCalibrationDisplay();
+                break;
             case 'zoneChanged':
                 this.timeDisplay.setAttribute('data-zone', SharedState.selectedZone);
                 this.updateSweepPercentage();
@@ -87,6 +96,13 @@ export const HomeTimer = {
      * Set up all event listeners
      */
     setupEventListeners() {
+        // Reset button
+        if (this.resetButton) {
+            this.resetButton.addEventListener('click', () => {
+                this.resetCalibration();
+            });
+        }
+        
         // Time display click to cycle zones
         this.timeDisplay.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -449,5 +465,25 @@ export const HomeTimer = {
         this.touchArea.classList.remove('active');
         
         this.updateDisplay();
+    },
+    
+    /**
+     * Update calibration samples display
+     */
+    updateCalibrationDisplay() {
+        if (this.calSamplesElement) {
+            const calInfo = Physics.getCalibrationInfo();
+            this.calSamplesElement.textContent = calInfo.sampleCount;
+        }
+    },
+    
+    /**
+     * Reset calibration to defaults
+     */
+    resetCalibration() {
+        if (confirm('Reset calibration to defaults?')) {
+            SharedState.resetCalibration();
+            // Note: updateCalibrationDisplay() is called automatically via SharedState listener
+        }
     }
 };
