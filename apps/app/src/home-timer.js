@@ -352,44 +352,26 @@ export const HomeTimer = {
     updateSweepPercentage() {
         const predictedPosition = SharedState.getPredictedDistance();
         const sweptPosition = SharedState.getSweptDistance();
+        const targetDistance = this.getTargetDistance();
         
-        if (!SharedState.currentThrow && !this.isDraggingPredicted && !this.isDraggingSwept) {
-            // Before any throw, show preview based on current positions
-            const sweepDistance = sweptPosition - predictedPosition;
-            const totalDistance = predictedPosition;
-            const sweepPercentage = totalDistance > 0 ? sweepDistance / totalDistance : 0;
-            this.sweepPercentage.textContent = Math.max(0, Math.min(1, sweepPercentage)).toFixed(2);
-            
-            // Set color based on zone
-            const targetDistance = this.getTargetDistance();
-            if (Math.abs(predictedPosition - targetDistance) <= 3) {
-                this.sweepPercentage.className = 'sweep-percentage good';
-            } else if (predictedPosition < targetDistance) {
-                this.sweepPercentage.className = 'sweep-percentage slow';
-            } else {
-                this.sweepPercentage.className = 'sweep-percentage fast';
-            }
-            return;
-        }
+        // Calculate sweep percentage using Physics module
+        const sweepPercentage = Physics.calculateSweepPercentage(
+            predictedPosition,
+            sweptPosition,
+            SharedState.selectedZone
+        );
         
-        if (SharedState.currentThrow) {
-            const actualDistance = predictedPosition;
-            const targetDistance = this.getTargetDistance();
-            
-            // Calculate sweep percentage (0-1)
-            const sweepDistance = sweptPosition - actualDistance;
-            const sweepPercentage = actualDistance > 0 ? sweepDistance / actualDistance : 0;
-            this.sweepPercentage.textContent = Math.max(0, Math.min(1, sweepPercentage)).toFixed(2);
-            
-            // Color based on speed
-            const tolerance = 3; // feet
-            if (Math.abs(actualDistance - targetDistance) <= tolerance) {
-                this.sweepPercentage.className = 'sweep-percentage good';
-            } else if (actualDistance < targetDistance) {
-                this.sweepPercentage.className = 'sweep-percentage slow';
-            } else {
-                this.sweepPercentage.className = 'sweep-percentage fast';
-            }
+        // Display the percentage (cap display at 1.00 for clarity, even if >1 internally)
+        this.sweepPercentage.textContent = Math.min(1, sweepPercentage).toFixed(2);
+        
+        // Set color based on how close predicted position is to target
+        const tolerance = 3; // feet
+        if (Math.abs(predictedPosition - targetDistance) <= tolerance) {
+            this.sweepPercentage.className = 'sweep-percentage good';
+        } else if (predictedPosition < targetDistance) {
+            this.sweepPercentage.className = 'sweep-percentage slow';
+        } else {
+            this.sweepPercentage.className = 'sweep-percentage fast';
         }
     },
 

@@ -276,6 +276,43 @@ export const Physics = {
     },
 
     /**
+     * Calculate the required sweep percentage to reach the target zone center
+     * 
+     * This calculates what percentage of the available sweeping effect needs to be
+     * applied to make the rock reach the center of the intended zone.
+     * 
+     * @param {number} predictedDistance - Predicted distance without sweeping (feet)
+     * @param {number} sweptDistance - Distance with 100% sweeping (feet)
+     * @param {string} intendedZone - Target zone: 'guard', 'draw', or 'takeout'
+     * @returns {number} Sweep percentage (0-1+) where 1.0 = 100% sweeping needed
+     *                   Returns 0 if already at or past target
+     *                   Can return > 1 if target is beyond swept distance
+     */
+    calculateSweepPercentage(predictedDistance, sweptDistance, intendedZone) {
+        const targetDistance = this.getZoneCenter(intendedZone);
+        
+        // If predicted distance is already at or past target, no sweeping needed
+        if (predictedDistance >= targetDistance) {
+            return 0;
+        }
+        
+        // Calculate the available sweep effect (how much sweeping adds)
+        const availableSweepDistance = sweptDistance - predictedDistance;
+        
+        // Handle edge case where there's no sweep effect
+        if (availableSweepDistance <= 0) {
+            return 0;
+        }
+        
+        // Calculate how much of the available sweep distance is needed
+        const neededDistance = targetDistance - predictedDistance;
+        const sweepPercentage = neededDistance / availableSweepDistance;
+        
+        // Return the percentage (can be > 1 if target is beyond swept distance)
+        return Math.max(0, sweepPercentage);
+    },
+
+    /**
      * Add a calibration sample and update deceleration
      * 
      * @param {number} backToHogTime - Time from back line to near hog line (seconds)
