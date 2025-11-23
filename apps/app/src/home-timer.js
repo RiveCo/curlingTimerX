@@ -6,6 +6,7 @@
 import { Physics } from './physics.js';
 import { TimerBackend } from './timer-backend.js';
 import { SharedState } from './shared-state.js';
+import deviceControls from './lib/device-controls.js';
 
 export const HomeTimer = {
     
@@ -63,6 +64,9 @@ export const HomeTimer = {
         
         // Set up event listeners
         this.setupEventListeners();
+        
+        // Set up scroll wheel support
+        this.setupScrollWheel();
         
         // Initialize display from shared state
         this.updatePositions();
@@ -311,6 +315,41 @@ export const HomeTimer = {
             if (this.isDraggingSwept) {
                 onSweptDragEnd();
             }
+        });
+    },
+
+    /**
+     * Set up scroll wheel for position adjustment
+     */
+    setupScrollWheel() {
+        // Initialize device controls
+        deviceControls.init({ scrollWheelEnabled: true });
+        
+        // Handle scroll wheel events
+        deviceControls.on('scrollWheel', (data) => {
+            // Only allow scroll wheel adjustment when timer is not running
+            if (TimerBackend.isRunning) return;
+            
+            const currentPredicted = SharedState.getPredictedDistance();
+            const step = SharedState.SCROLL_WHEEL_STEP_SIZE; // Use configured step size
+            
+            let newPosition;
+            if (data.direction === 'up') {
+                // Scroll up = increase distance (move toward back)
+                newPosition = Math.min(
+                    this.SCALE_CONFIG.topPosition,
+                    currentPredicted + step
+                );
+            } else {
+                // Scroll down = decrease distance (move toward hog)
+                newPosition = Math.max(
+                    this.SCALE_CONFIG.bottomPosition,
+                    currentPredicted - step
+                );
+            }
+            
+            // Update position with scroll wheel flag
+            SharedState.setAdjustedPredictedDistance(newPosition, true);
         });
     },
 

@@ -6,6 +6,10 @@
 /* Home Screen Layout */
 #home-screen {
     background: #000000;
+    /* Extend background to cover any blue strip at bottom */
+    min-height: 100vh;
+    /* Override any body gradient background */
+    height: 100%;
 }
 
 .home-header {
@@ -84,11 +88,11 @@
 }
 
 .scale-container.scale-left {
-    left: 20px;
+    left: 8px;
 }
 
 .scale-container.scale-right {
-    right: 20px;
+    right: 8px;
 }
 
 .scale-line {
@@ -102,9 +106,9 @@
 .scale-left .scale-line::after {
     content: '';
     position: absolute;
-    left: -10px;
+    left: -12px;
     top: -1px;
-    width: 10px;
+    width: 12px;
     height: 4px;
     background: rgba(255, 255, 255, 0.8);
 }
@@ -112,9 +116,9 @@
 .scale-right .scale-line::after {
     content: '';
     position: absolute;
-    right: -10px;
+    right: -12px;
     top: -1px;
-    width: 10px;
+    width: 12px;
     height: 4px;
     background: rgba(255, 255, 255, 0.8);
 }
@@ -127,13 +131,13 @@
 }
 
 .scale-left .scale-line.intermediate-line::after {
-    width: 6px;
+    width: 8px;
     height: 2px;
     background: rgba(255, 255, 255, 0.4);
 }
 
 .scale-right .scale-line.intermediate-line::after {
-    width: 6px;
+    width: 8px;
     height: 2px;
     background: rgba(255, 255, 255, 0.4);
 }
@@ -176,11 +180,11 @@
 }
 
 .position-indicator.left {
-    left: 20px;
+    left: 8px;
 }
 
 .position-indicator.right {
-    right: 20px;
+    right: 8px;
     pointer-events: none; /* Right side is visual only */
 }
 
@@ -204,11 +208,11 @@
 }
 
 .position-indicator.left.swept {
-    left: 25px; /* Offset slightly to the right */
+    left: 13px; /* Offset slightly to the right */
 }
 
 .position-indicator.right.swept {
-    right: 25px; /* Offset slightly to the left */
+    right: 13px; /* Offset slightly to the left */
 }
 
 .position-indicator.dragging {
@@ -315,12 +319,12 @@
     }
     
     .scale-container.scale-left {
-        left: 15px;
+        left: 6px;
         width: 30px;
     }
     
     .scale-container.scale-right {
-        right: 15px;
+        right: 6px;
         width: 30px;
     }
 }

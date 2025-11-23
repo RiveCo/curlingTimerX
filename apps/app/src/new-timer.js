@@ -330,17 +330,18 @@ export const NewTimer = {
         const adjustment = direction * 2; // 2 feet per scroll
         const newDistance = Math.max(0, Math.min(Physics.DIMENSIONS.hoglineToBackline, currentDistance + adjustment));
         
-        this.setAdjustedDistance(newDistance);
+        this.setAdjustedDistance(newDistance, true); // true = from scroll wheel
     },
 
     /**
      * Set adjusted distance for current throw
      * @param {number} distance - New distance in feet
+     * @param {boolean} fromScrollWheel - Whether adjustment was made via scroll wheel
      */
-    setAdjustedDistance(distance) {
+    setAdjustedDistance(distance, fromScrollWheel = false) {
         if (!SharedState.currentThrow) return;
         
-        SharedState.setAdjustedPredictedDistance(distance);
+        SharedState.setAdjustedPredictedDistance(distance, fromScrollWheel);
         this.isAdjustingRock = true;
     },
 
