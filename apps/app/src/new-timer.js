@@ -60,9 +60,7 @@ export const NewTimer = {
         this.infoSwept = document.getElementById('info-swept');
 
         // Set up timer backend callback
-        TimerBackend.onTick = (elapsedSeconds) => {
-            this.updateTimerDisplay(elapsedSeconds);
-        };
+        this.registerCallback();
         
         // Listen to shared state changes
         SharedState.addListener((event) => {
@@ -78,6 +76,15 @@ export const NewTimer = {
         // Initialize display
         this.updateDisplay();
         this.renderRink();
+    },
+    
+    /**
+     * Register timer callback for real-time updates
+     */
+    registerCallback() {
+        TimerBackend.onTick = (elapsedSeconds) => {
+            this.updateTimerDisplay(elapsedSeconds);
+        };
     },
     
     /**
