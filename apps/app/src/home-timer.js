@@ -50,9 +50,7 @@ export const HomeTimer = {
         this.resetButton = document.getElementById('home-reset-calibration');
         
         // Set up timer backend callback
-        TimerBackend.onTick = (elapsedSeconds) => {
-            this.updateDisplay(elapsedSeconds);
-        };
+        this.registerCallback();
         
         // Listen to shared state changes
         SharedState.addListener((event) => {
@@ -68,6 +66,15 @@ export const HomeTimer = {
         this.updateCalibrationDisplay();
     },
     
+    /**
+     * Register timer callback for real-time updates
+     */
+    registerCallback() {
+        TimerBackend.onTick = (elapsedSeconds) => {
+            this.updateDisplay(elapsedSeconds);
+        };
+    },
+
     /**
      * Handle shared state changes
      */

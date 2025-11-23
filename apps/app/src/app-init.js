@@ -37,6 +37,9 @@ function switchToHome() {
     advancedScreen.style.display = 'none';
     currentScreen = 'home';
     
+    // Re-register HomeTimer's callback for real-time updates
+    HomeTimer.registerCallback();
+    
     // Update home screen with current state from SharedState
     HomeTimer.updatePositions();
     HomeTimer.updateSweepPercentage();
@@ -53,6 +56,9 @@ function switchToAdvanced() {
     homeScreen.style.display = 'none';
     advancedScreen.style.display = 'flex';
     currentScreen = 'advanced';
+    
+    // Re-register NewTimer's callback for real-time updates
+    NewTimer.registerCallback();
     
     // Update advanced screen rendering with current state from SharedState
     NewTimer.updateDisplay();
