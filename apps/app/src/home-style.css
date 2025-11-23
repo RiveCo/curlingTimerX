@@ -314,8 +314,13 @@
         font-size: 18px;
     }
     
-    .scale-container {
+    .scale-container.scale-left {
         left: 15px;
+        width: 30px;
+    }
+    
+    .scale-container.scale-right {
+        right: 15px;
         width: 30px;
     }
 }
