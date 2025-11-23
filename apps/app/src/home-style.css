@@ -120,24 +120,19 @@
     bottom: 0;
 }
 
-.guard-center-line {
-    /* Intermediate line - guard zone center at ~133.5ft (~27.8% from bottom) */
-    bottom: 27.8%;
+.center-line-1 {
+    /* Intermediate line - center between hog and front house at 133.5ft (27.78% from bottom) */
+    bottom: 27.78%;
 }
 
 .front-house-line {
-    /* Front of house at 141ft (55.6% from bottom) */
-    bottom: 55.6%;
+    /* Middle main line - front of house at 141ft (55.56% from bottom) */
+    bottom: 55.56%;
 }
 
-.tee-line {
-    /* Tee line - center of house at 147ft (77.8% from bottom) */
-    bottom: 77.8%;
-}
-
-.house-center-line {
-    /* Intermediate line - between tee and back at ~150ft (88.9% from bottom) */
-    bottom: 88.9%;
+.center-line-2 {
+    /* Intermediate line - center between front house and back at 147ft (77.78% from bottom) */
+    bottom: 77.78%;
 }
 
 .back-line {
