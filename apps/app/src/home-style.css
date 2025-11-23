@@ -80,18 +80,15 @@
     top: 0;
     bottom: 0;
     width: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
     pointer-events: none;
     z-index: 10;
 }
 
 .scale-line {
+    position: absolute;
     width: 100%;
     height: 2px;
     background: rgba(255, 255, 255, 0.8);
-    position: relative;
 }
 
 .scale-line::after {
@@ -104,16 +101,49 @@
     background: rgba(255, 255, 255, 0.8);
 }
 
+/* Intermediate lines - smaller and dimmer */
+.scale-line.intermediate-line {
+    width: 60%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.scale-line.intermediate-line::after {
+    width: 6px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Position lines based on curling rink dimensions (126-153ft range = 27ft viewport) */
 .hog-line {
-    /* Bottom line - represents hog line */
+    /* Bottom line - hog line at 126ft (0% from bottom) */
+    bottom: 0%;
+}
+
+.guard-center-line {
+    /* Intermediate line - guard zone center at ~133.5ft (~27.8% from bottom) */
+    bottom: 27.8%;
 }
 
 .front-house-line {
-    /* Middle line - front of house */
+    /* Front of house at 141ft (55.6% from bottom) */
+    bottom: 55.6%;
+}
+
+.tee-line {
+    /* Tee line - center of house at 147ft (77.8% from bottom) */
+    bottom: 77.8%;
+}
+
+.house-center-line {
+    /* Intermediate line - between tee and back at ~150ft (88.9% from bottom) */
+    bottom: 88.9%;
 }
 
 .back-line {
-    /* Top line - back line */
+    /* Top line - back line at 153ft (100% from bottom) */
+    bottom: 100%;
+    top: 0;
 }
 
 /* Position Indicators */
@@ -161,6 +191,7 @@
     justify-content: center;
     gap: 16px;
     z-index: 1;
+    margin-left: 40px; /* Move timer to the right to avoid line overlap */
 }
 
 /* Time Display */
