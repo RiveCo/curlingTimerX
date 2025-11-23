@@ -116,8 +116,8 @@
 
 /* Position lines based on curling rink dimensions (126-153ft range = 27ft viewport) */
 .hog-line {
-    /* Bottom line - hog line at 126ft (0% from bottom) */
-    bottom: 0%;
+    /* Bottom line - hog line at 126ft (0 from bottom) */
+    bottom: 0;
 }
 
 .guard-center-line {
@@ -141,8 +141,7 @@
 }
 
 .back-line {
-    /* Top line - back line at 153ft (100% from bottom) */
-    bottom: 100%;
+    /* Top line - back line at 153ft (at top) */
     top: 0;
 }
 
