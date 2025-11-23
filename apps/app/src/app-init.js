@@ -12,6 +12,7 @@ import { Physics } from './physics.js';
 import { SharedState } from './shared-state.js';
 import { NewTimer } from './new-timer.js';
 import { HomeTimer } from './home-timer.js';
+import { TimerBackend } from './timer-backend.js';
 import pttHandler from './lib/ptt-handler.js';
 
 // Initialize PTT handler to prevent voice assistant activation
@@ -37,6 +38,11 @@ function switchToHome() {
     advancedScreen.style.display = 'none';
     currentScreen = 'home';
     
+    // Re-register HomeTimer's callback for real-time updates
+    TimerBackend.onTick = (elapsedSeconds) => {
+        HomeTimer.updateDisplay(elapsedSeconds);
+    };
+    
     // Update home screen with current state from SharedState
     HomeTimer.updatePositions();
     HomeTimer.updateSweepPercentage();
@@ -53,6 +59,11 @@ function switchToAdvanced() {
     homeScreen.style.display = 'none';
     advancedScreen.style.display = 'flex';
     currentScreen = 'advanced';
+    
+    // Re-register NewTimer's callback for real-time updates
+    TimerBackend.onTick = (elapsedSeconds) => {
+        NewTimer.updateTimerDisplay(elapsedSeconds);
+    };
     
     // Update advanced screen rendering with current state from SharedState
     NewTimer.updateDisplay();
