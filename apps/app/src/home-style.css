@@ -76,12 +76,19 @@
 /* Scale Container with Lines */
 .scale-container {
     position: absolute;
-    left: 20px;
     top: 0;
     bottom: 0;
-    width: 40px;
+    width: 30px;
     pointer-events: none;
     z-index: 10;
+}
+
+.scale-container.scale-left {
+    left: 20px;
+}
+
+.scale-container.scale-right {
+    right: 20px;
 }
 
 .scale-line {
@@ -91,10 +98,21 @@
     background: rgba(255, 255, 255, 0.8);
 }
 
-.scale-line::after {
+/* Tick marks extending outward */
+.scale-left .scale-line::after {
     content: '';
     position: absolute;
     left: -10px;
+    top: -1px;
+    width: 10px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.scale-right .scale-line::after {
+    content: '';
+    position: absolute;
+    right: -10px;
     top: -1px;
     width: 10px;
     height: 4px;
@@ -108,7 +126,13 @@
     background: rgba(255, 255, 255, 0.4);
 }
 
-.scale-line.intermediate-line::after {
+.scale-left .scale-line.intermediate-line::after {
+    width: 6px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.scale-right .scale-line.intermediate-line::after {
     width: 6px;
     height: 2px;
     background: rgba(255, 255, 255, 0.4);
@@ -143,13 +167,21 @@
 /* Position Indicators */
 .position-indicator {
     position: absolute;
-    left: 20px;
     width: 50px; /* Wider for better visibility */
     height: 4px; /* Thicker for better visibility */
     pointer-events: auto;
     cursor: ns-resize;
     transition: all 0.1s ease-out;
     z-index: 11;
+}
+
+.position-indicator.left {
+    left: 20px;
+}
+
+.position-indicator.right {
+    right: 20px;
+    pointer-events: none; /* Right side is visual only */
 }
 
 .position-indicator::before {
@@ -169,7 +201,14 @@
 .position-indicator.swept {
     background: #ef4444; /* Red */
     box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+}
+
+.position-indicator.left.swept {
     left: 25px; /* Offset slightly to the right */
+}
+
+.position-indicator.right.swept {
+    right: 25px; /* Offset slightly to the left */
 }
 
 .position-indicator.dragging {
@@ -185,7 +224,6 @@
     justify-content: center;
     gap: 16px;
     z-index: 1;
-    margin-left: 40px; /* Move timer to the right to avoid line overlap */
 }
 
 /* Time Display */

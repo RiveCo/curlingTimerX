@@ -22,6 +22,8 @@ export const HomeTimer = {
     touchArea: null,
     predictedPosElement: null,
     sweptPosElement: null,
+    predictedPosElementRight: null,
+    sweptPosElementRight: null,
     mainElement: null,
     calSamplesElement: null,
     resetButton: null,
@@ -45,6 +47,8 @@ export const HomeTimer = {
         this.touchArea = document.getElementById('home-timer-touch-area');
         this.predictedPosElement = document.getElementById('home-predicted-pos');
         this.sweptPosElement = document.getElementById('home-swept-pos');
+        this.predictedPosElementRight = document.getElementById('home-predicted-pos-right');
+        this.sweptPosElementRight = document.getElementById('home-swept-pos-right');
         this.mainElement = this.homeScreen.querySelector('.home-main');
         this.calSamplesElement = document.getElementById('home-cal-samples');
         this.resetButton = document.getElementById('home-reset-calibration');
@@ -349,8 +353,17 @@ export const HomeTimer = {
         const sweptY = this.mainElement.offsetHeight - 
             (sweptPosition - this.SCALE_CONFIG.bottomPosition) * scale;
         
+        // Update left-side indicators
         this.predictedPosElement.style.top = `${predictedY}px`;
         this.sweptPosElement.style.top = `${sweptY}px`;
+        
+        // Update right-side indicators (mirrors)
+        if (this.predictedPosElementRight) {
+            this.predictedPosElementRight.style.top = `${predictedY}px`;
+        }
+        if (this.sweptPosElementRight) {
+            this.sweptPosElementRight.style.top = `${sweptY}px`;
+        }
     },
 
     /**
@@ -470,9 +483,7 @@ export const HomeTimer = {
      * Reset calibration to defaults
      */
     resetCalibration() {
-        if (confirm('Reset calibration to defaults?')) {
-            SharedState.resetCalibration();
-            // Note: updateCalibrationDisplay() is called automatically via SharedState listener
-        }
+        SharedState.resetCalibration();
+        // Note: updateCalibrationDisplay() is called automatically via SharedState listener
     }
 };

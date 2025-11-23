@@ -24,8 +24,8 @@
         </header>
 
         <main class="home-main">
-            <!-- Vertical scale with lines -->
-            <div class="scale-container">
+            <!-- Vertical scale with lines (left side) -->
+            <div class="scale-container scale-left">
                 <div class="scale-line hog-line"></div>
                 <div class="scale-line intermediate-line center-line-1"></div>
                 <div class="scale-line front-house-line"></div>
@@ -33,9 +33,22 @@
                 <div class="scale-line back-line"></div>
             </div>
             
-            <!-- Draggable position indicators -->
-            <div id="home-predicted-pos" class="position-indicator predicted"></div>
-            <div id="home-swept-pos" class="position-indicator swept"></div>
+            <!-- Vertical scale with lines (right side) -->
+            <div class="scale-container scale-right">
+                <div class="scale-line hog-line"></div>
+                <div class="scale-line intermediate-line center-line-1"></div>
+                <div class="scale-line front-house-line"></div>
+                <div class="scale-line intermediate-line center-line-2"></div>
+                <div class="scale-line back-line"></div>
+            </div>
+            
+            <!-- Draggable position indicators (left side) -->
+            <div id="home-predicted-pos" class="position-indicator predicted left"></div>
+            <div id="home-swept-pos" class="position-indicator swept left"></div>
+            
+            <!-- Draggable position indicators (right side) -->
+            <div id="home-predicted-pos-right" class="position-indicator predicted right"></div>
+            <div id="home-swept-pos-right" class="position-indicator swept right"></div>
 
             <!-- Center time display -->
             <div class="center-content">
