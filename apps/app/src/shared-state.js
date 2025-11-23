@@ -22,6 +22,10 @@ export const SharedState = {
     // Manual position adjustments
     adjustedPredictedDistance: null, // Manually adjusted predicted position
     adjustedSweptDistance: null, // Manually adjusted swept position
+    positionAdjustedByScrollWheel: false, // Track if scroll wheel was used for adjustment
+    
+    // Configuration
+    SCROLL_WHEEL_STEP_SIZE: 0.5, // Feet per scroll on home screen
     
     // State change listeners (for updating UIs)
     listeners: [],
@@ -131,20 +135,28 @@ export const SharedState = {
     /**
      * Set adjusted predicted distance
      * @param {number} distance - New predicted distance in feet
+     * @param {boolean} fromScrollWheel - Whether adjustment was made via scroll wheel
      */
-    setAdjustedPredictedDistance(distance) {
+    setAdjustedPredictedDistance(distance, fromScrollWheel = false) {
         this.adjustedPredictedDistance = distance;
         // Auto-update swept distance based on new predicted
         this.adjustedSweptDistance = Physics.predictSweptDistance(distance, 'normal');
+        if (fromScrollWheel) {
+            this.positionAdjustedByScrollWheel = true;
+        }
         this.notifyListeners('positionAdjusted');
     },
     
     /**
      * Set adjusted swept distance independently
      * @param {number} distance - New swept distance in feet
+     * @param {boolean} fromScrollWheel - Whether adjustment was made via scroll wheel
      */
-    setAdjustedSweptDistance(distance) {
+    setAdjustedSweptDistance(distance, fromScrollWheel = false) {
         this.adjustedSweptDistance = distance;
+        if (fromScrollWheel) {
+            this.positionAdjustedByScrollWheel = true;
+        }
         this.notifyListeners('positionAdjusted');
     },
     
@@ -161,8 +173,8 @@ export const SharedState = {
                 finalDistance: finalPredictedDistance 
             };
             
-            // Auto-calibrate if position was manually adjusted
-            if (this.adjustedPredictedDistance !== null) {
+            // Auto-calibrate if position was manually adjusted (including scroll wheel)
+            if (this.hasPositionAdjustments()) {
                 Physics.addCalibrationSample(this.currentThrow.time, finalPredictedDistance);
                 this.previousThrow = null; // Clear since we auto-calibrated
             }
@@ -190,6 +202,7 @@ export const SharedState = {
         // Clear manual adjustments for new throw
         this.adjustedPredictedDistance = null;
         this.adjustedSweptDistance = null;
+        this.positionAdjustedByScrollWheel = false;
         
         this.notifyListeners('throwRecorded');
     },
@@ -211,6 +224,7 @@ export const SharedState = {
         this.currentThrow = null;
         this.adjustedPredictedDistance = null;
         this.adjustedSweptDistance = null;
+        this.positionAdjustedByScrollWheel = false;
         this.createInitialThrowPreview();
         this.notifyListeners('reset');
     },
