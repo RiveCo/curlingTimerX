@@ -384,23 +384,13 @@ export const HomeTimer = {
         const predictedPosition = SharedState.getPredictedDistance();
         const sweptPosition = SharedState.getSweptDistance();
         
-        // Clamp positions to visible viewport range (126-153 feet)
-        const clampedPredicted = Math.max(
-            this.SCALE_CONFIG.bottomPosition,
-            Math.min(this.SCALE_CONFIG.topPosition, predictedPosition)
-        );
-        const clampedSwept = Math.max(
-            this.SCALE_CONFIG.bottomPosition,
-            Math.min(this.SCALE_CONFIG.topPosition, sweptPosition)
-        );
-        
         const scale = this.mainElement.offsetHeight / this.SCALE_CONFIG.viewportRange;
         
         // Calculate Y positions (inverted - 0 at top)
         const predictedY = this.mainElement.offsetHeight - 
-            (clampedPredicted - this.SCALE_CONFIG.bottomPosition) * scale;
+            (predictedPosition - this.SCALE_CONFIG.bottomPosition) * scale;
         const sweptY = this.mainElement.offsetHeight - 
-            (clampedSwept - this.SCALE_CONFIG.bottomPosition) * scale;
+            (sweptPosition - this.SCALE_CONFIG.bottomPosition) * scale;
         
         // Update left-side indicators
         this.predictedPosElement.style.top = `${predictedY}px`;
