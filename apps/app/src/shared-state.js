@@ -161,6 +161,16 @@ export const SharedState = {
     },
     
     /**
+     * Check if there are any manual position adjustments
+     * @returns {boolean} True if positions have been manually adjusted
+     */
+    hasPositionAdjustments() {
+        return this.adjustedPredictedDistance !== null || 
+               this.adjustedSweptDistance !== null ||
+               this.positionAdjustedByScrollWheel;
+    },
+    
+    /**
      * Record a new throw from timer
      * @param {number} time - Time in seconds
      */
